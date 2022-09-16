@@ -34,10 +34,11 @@ class ParserState(Generic[Token]):
     def pop(self) -> None:
         '''Pop the last previous context from the stack,
         and restore it as the new current context.'''
-        if len(self.stack) < 1:
+        try:
+            self.context = self.stack[-1]
+        except IndexError:
             raise ValueError(
                 'Cannot pop empty ParserState stack')
-        self.context = self.stack[-1]
         self.stack.pop() 
 
 @dataclass
