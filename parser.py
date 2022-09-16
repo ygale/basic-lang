@@ -67,6 +67,20 @@ def parse(
         _input, ParserContext(what=what))
     return parser(state)
 
+def ap(
+        parser: Callable[
+            Concatenate[ParserState[Token], P],
+            Output],
+        *args: P.args,
+        **kwargs: P.kwargs
+        ) -> Callable[[ParserState], Output]:
+    '''Convert a parser with parameters into a
+    simple parses by applying all parameters
+    except the first.'''
+    def inner_parser(s: ParserState) -> Output:
+        return parser(s, *args, **kwargs)
+    return inner_parser
+
 @contextmanager
 def what(s: ParserState, what: str | None
         ) -> Generator[None, None, None]:
@@ -115,33 +129,48 @@ def lit(
 
 def optional(
         s: ParserState[Token],
-        parser: Callable[
-            Concatenate[ParserState[Token], P],
-            Output],
-        *args: P.args,
-        **kwargs: P.kwargs
+        parser: Callable[[ParserState], Output]
         ) -> Output | None:
     '''Run a parser and return None if it fails.'''
     try:
-        return parser(s, *args, **kwargs)
+        return parser(s)
     except NoParse:
         return None
 
 def attempt(
         s: ParserState[Token],
-        parser: Callable[
-            Concatenate[ParserState[Token], P],
-            Output],
-        *args: P.args,
-        **kwargs: P.kwargs
+        parser: Callable[[ParserState[Token]], Output]
         ) -> Output:
     '''Run a parser, and if it fails, roll back
     ParserState to its previous state'''
     s.push()
     try:
-        result = parser(s, *args, **kwargs)
+        result = parser(s)
     except NoParse:
         s.pop()
         raise
-    s.pop()
     return result
+
+def many(
+        s: ParserState[Token],
+        parser: Callable[[ParserState[Token]], Output]
+        ) -> list[Output]:
+    '''Run a parser as many times as it succeeds,
+    and collect the outputs in a list.'''
+    res = []
+    while True:
+        try:
+            res.append(parser(s))
+        except NoParse:
+            return res
+
+def many1(
+        s: ParserState[Token],
+        parser: Callable[[ParserState[Token]], Output]
+        ) -> list[Output]:
+    '''Run a parser at least once, and as many more
+    times after that as it succeeds,
+    and collect the outputs in a list.'''
+    res = [parser(s)]
+    res += many(s, parser)
+    return res
