@@ -97,7 +97,7 @@ def end(s: ParserState[object]) -> None:
             expected='end of input',
             found=s._input[s.context.cursor:])
 
-def literally(
+def lit(
         s: ParserState[Token],
         given: Sequence[Token]
         ) -> Sequence[Token]:
