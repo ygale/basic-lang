@@ -65,7 +65,12 @@ def parse(
     'Run the parser on the given input.'
     state = ParserState(
         _input, ParserContext(what=what))
-    return parser(state)
+    try:
+        return parser(state)
+    except NoParse as e:
+        if what is not None:
+            e.expected = what
+        raise e
 
 def ap(
         parser: Callable[
@@ -75,7 +80,7 @@ def ap(
         **kwargs: P.kwargs
         ) -> Callable[[ParserState], Output]:
     '''Convert a parser with parameters into a
-    simple parses by applying all parameters
+    simple parser by applying all parameters
     except the first.'''
     def inner_parser(s: ParserState) -> Output:
         return parser(s, *args, **kwargs)
@@ -88,6 +93,10 @@ def what(s: ParserState, what: str | None
     s.context.what = what
     try:
         yield
+    except NoParse as e:
+        if what is not None:
+            e.expected = what
+        raise e
     finally:
         s.pop()
 
