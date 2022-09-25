@@ -111,6 +111,18 @@ def end(s: ParserState[object]) -> None:
             expected='end of input',
             found=s._input[s.context.cursor:])
 
+def satisfy(
+        s: ParserState[Token],
+        pred: Callable[[Token], bool]
+        ) -> Token:
+    '''Parse a single token that satisfies the
+    given predicate.'''
+    tok: Token = s._input[s.context.cursor]
+    if not pred(tok):
+        fail(s, expected=pred, found=False)
+    s.context.cursor += 1
+    return tok
+
 def lit(
         s: ParserState[Token],
         given: Sequence[Token]
