@@ -68,8 +68,8 @@ def parse(
     try:
         return parser(state)
     except NoParse as e:
-        if what is not None:
-            e.expected = what
+        if state.context.what is not None:
+            e.what = state.context.what
         raise e
 
 def ap(
