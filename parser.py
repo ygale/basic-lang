@@ -3,7 +3,7 @@ from copy import copy
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import (Callable, Concatenate,
-  Generic, ParamSpec, TypeVar)
+  Generic, Iterable, ParamSpec, TypeVar)
 
 # The input to a parser is a sequence of tokens.
 Token = TypeVar('Token')
@@ -104,13 +104,14 @@ def fail(
         s: ParserState,
         expected: object,
         found: object
-        ) -> None:
+        ) -> Output:
     '''A parser that always fails.'''
     raise NoParse(
         position=s.context.cursor,
         expected=expected,
         found=found,
         what=s.context.what)
+    return [][0]
 
 def end(s: ParserState[object]) -> None:
     '''A parser that succeeds if there is no more
@@ -172,13 +173,35 @@ def attempt(
         raise
     return result
 
+def choice(
+        s: ParserState[Token],
+        parsers: Iterable[
+            Callable[[ParserState[Token]], Output]]
+        ) -> Output:
+    '''Return the result of the first parser that
+    succeeds.'''
+    expects: list[object] = []
+    found1: object = None
+    for parser in parsers:
+        try:
+            return parser(s)
+        except NoParse as e:
+            expects.append(e.expected)
+            if found1 is None:
+                found1 = e.found
+    fail(s,
+         ' or '.join([str(ex) for ex in expects]
+             ) if len(expects) > 0 else 'no choices',
+         found1)
+    return [][0]
+
 def many(
         s: ParserState[Token],
         parser: Callable[[ParserState[Token]], Output]
         ) -> list[Output]:
     '''Run a parser as many times as it succeeds,
     and collect the outputs in a list.'''
-    res = []
+    res: list[Output] = []
     while True:
         try:
             res.append(parser(s))
@@ -192,6 +215,6 @@ def many1(
     '''Run a parser at least once, and as many more
     times after that as it succeeds,
     and collect the outputs in a list.'''
-    res = [parser(s)]
+    res: list[Output] = [parser(s)]
     res += many(s, parser)
     return res
