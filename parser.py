@@ -243,3 +243,17 @@ def regex(
     return (
         s._input[m.start():m.end()],
         [g for g in m.groups()])
+
+space_patt: re.Pattern[str] = re.compile(r'\s*')
+def space(s: ParserState[str]) -> str:
+    '''Parse optional whitespace.'''
+    return regex(s, space_patt)[0]
+
+space1_patt: re.Pattern[str] = re.compile(r'\s+')
+def space1(s: ParserState[str]) -> str:
+    '''Parse whitespace.'''
+    try:
+        return regex(s, space1_patt)[0]
+    except NoParse as e:
+        e.expected = 'whitespace'
+        raise e
