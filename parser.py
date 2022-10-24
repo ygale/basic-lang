@@ -74,8 +74,13 @@ def parse(
         return parser(state)
     except NoParse as e:
         if state.context.what is not None:
-            e.what = state.context.what
-        raise e
+            what = state.context.what
+        else:
+            what = e.what
+        fail(state,
+            e.expected,
+            e.found,
+            what)
 
 def ap(
         parser: Callable[
@@ -99,23 +104,26 @@ def what(s: ParserState, what: str | None
     try:
         yield
     except NoParse as e:
-        if what is not None:
-            e.expected = what
-        raise e
+        fail(s,
+            expected=
+                what if what is not None
+                     else e.expected,
+            found=e.found)
     finally:
         s.pop()
 
 def fail(
         s: ParserState,
         expected: object,
-        found: object
+        found: object,
+        what: str | None = None
         ) -> NoReturn:
     '''A parser that always fails.'''
     raise NoParse(
         position=s.context.cursor,
         expected=expected,
         found=found,
-        what=s.context.what)
+        what=s.context.what if what is None else what)
 
 def end(s: ParserState[Sequence]) -> None:
     '''A parser that succeeds if there is no more
@@ -196,9 +204,10 @@ def choice(
             if found1 is None:
                 found1 = e.found
     fail(s,
-         ' or '.join([str(ex) for ex in expects]
-             ) if len(expects) > 0 else 'no choices',
-         found1)
+         expected=
+            ' or '.join([str(ex) for ex in expects])
+            if len(expects) > 0 else 'no choices',
+         found=found1)
     return [][0]
 
 def many(
@@ -235,8 +244,8 @@ def regex(
         s._input, s.context.cursor)
     if m_optional is None:
         fail(s,
-             patt.pattern,
-             s._input[s.context.cursor:])
+             expected=patt.pattern,
+             found=s._input[s.context.cursor:])
     else:
         m: re.Match[str] = m_optional
     s.context.cursor += m.end() - m.start()
@@ -255,5 +264,6 @@ def space1(s: ParserState[str]) -> str:
     try:
         return regex(s, space1_patt)[0]
     except NoParse as e:
-        e.expected = 'whitespace'
-        raise e
+        fail(s,
+            expected='whitespace',
+            found=e.found)
