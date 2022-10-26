@@ -123,7 +123,8 @@ def fail(
         position=s.context.cursor,
         expected=expected,
         found=found,
-        what=s.context.what if what is None else what)
+        what=s.context.what if what is None else what
+        ) from None
 
 def end(s: ParserState[Sequence]) -> None:
     '''A parser that succeeds if there is no more
