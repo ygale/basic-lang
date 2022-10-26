@@ -140,7 +140,12 @@ def satisfy(
         ) -> Token:
     '''Parse a single token that satisfies the
     given predicate.'''
-    tok: Token = s._input[s.context.cursor]
+    try:
+        tok: Token = s._input[s.context.cursor]
+    except IndexError:
+        fail(s,
+            expected=f'satisfies {str(pred)}',
+            found='end of input')
     if not pred(tok):
         fail(s,
             expected=f'satisfies {str(pred)}',
