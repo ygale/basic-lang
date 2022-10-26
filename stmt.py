@@ -85,5 +85,9 @@ class Rem(Stmt):
     comment: str
 
 @dataclass(frozen=True)
+class Stop(Stmt):
+    name = StmtName('STOP')
+
+@dataclass(frozen=True)
 class End(Stmt):
     name = StmtName('END')
