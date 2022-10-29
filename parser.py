@@ -7,6 +7,7 @@ import re
 from typing import (Any, Concatenate, Generic,
   NoReturn, ParamSpec, TypeVar)
 
+
 # The input to a parser is a sequence of tokens.
 Token = TypeVar('Token')
 Input = TypeVar('Input')
@@ -125,6 +126,23 @@ def fail(
         found=found,
         what=s.context.what if what is None else what
         ) from None
+
+def one(s: ParserState[Sequence[Token]]) -> Token:
+    '''Parse any single token.'''
+    if len(s._input) > s.context.cursor:
+        s.context.cursor += 1
+        return s._input[s.context.cursor - 1]
+    else:
+        fail(s,
+            expected='anything',
+            found='end of input')
+
+def the_rest(s: ParserState[Sequence[Token]]
+             ) -> Sequence[Token]:
+    '''Consume all of the remaining input.'''
+    rest: Sequence[Token] = s._input[s.context.cursor:]
+    s.context.cursor = len(s._input)
+    return rest
 
 def end(s: ParserState[Sequence]) -> None:
     '''A parser that succeeds if there is no more
@@ -272,4 +290,14 @@ def space1(s: ParserState[str]) -> str:
     except NoParse as e:
         fail(s,
             expected='whitespace',
+            found=e.found)
+
+digit1_patt: re.Pattern[str] = re.compile(r'[0-9]+')
+def digit1(s: ParserState[str]) -> str:
+    '''Parse one or more digits.'''
+    try:
+        return regex(s, digit1_patt)[0]
+    except NoParse as e:
+        fail(s,
+            expected='one or more digits',
             found=e.found)
