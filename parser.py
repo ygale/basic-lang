@@ -222,7 +222,7 @@ def choice(
     found1: object = None
     for parser in parsers:
         try:
-            return parser(s)
+            return attempt(s, parser)
         except NoParse as e:
             expects.append(e.expected)
             if found1 is None:
