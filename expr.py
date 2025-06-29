@@ -5,12 +5,15 @@ from typing import NewType
 
 VarName = NewType('VarName', str)
 
-@dataclass(frozen=True)
+@dataclass
 class ArrayElt:
+    '''A reference to an element of an array.'''
     name: VarName
     subscr: float
 
 class LookupVar:
+    '''A symbol table for looking up the values of
+    variables while evaluating an expression.'''
     @abstractmethod
     def lookup_scalar(self, var: VarName) -> float:
         raise NotImplementedError
@@ -20,19 +23,43 @@ class LookupVar:
         raise NotImplementedError
 
 class Expr:
-    def evaluate(self, lookup: LookupVar) -> float:
+    '''An expression.'''
+    @abstractmethod
+    def pprint(self) -> str:
+        '''Pretty-print.'''
         raise NotImplementedError
 
-@dataclass(frozen=True)
+    def pprint_prec(self, prec: int) -> str:
+        '''Pretty-print an expression nested as a
+        parameter of an operator with the given
+        precedence.'''
+        # By default ignore the precedence, unless
+        # this is itself an operator.
+        return self.pprint()
+
+    @abstractmethod
+    def evaluate(self, lookup: LookupVar) -> float:
+        '''Evaluate the value of the expression.'''
+        raise NotImplementedError
+
+@dataclass
 class ScalarVar(Expr):
+    '''A reference to a scalar variable in an
+    expression.'''
     name: VarName
+    def pprint(self) -> str:
+        return self.name
     def evaluate(self, lv: LookupVar) -> float:
         return lv.lookup_scalar(self.name)
 
-@dataclass(frozen=True)
+@dataclass
 class ArrayVar(Expr):
+    '''A reference to an element of an array in an
+    expression.'''
     name: VarName
     subscr: Expr
+    def pprint(self) -> str:
+        return f'{self.name}[{self.subscr.pprint()}]'
     def evaluate(self, lv: LookupVar) -> float:
         return lv.lookup_array(ArrayElt(
             name = self.name,
@@ -41,14 +68,11 @@ class ArrayVar(Expr):
 
 Var = ScalarVar | ArrayVar
 
-@dataclass(frozen=True)
+@dataclass
 class Num(Expr):
+    '''A numeric literal.'''
     val: float
+    def pprint(self) -> str:
+        return str(self.val)
     def evaluate(self, _: LookupVar) -> float:
         return self.val
-
-@dataclass(frozen=True)
-class Negate(Expr):
-    arg: Expr
-    def evaluate(self, lv: LookupVar) -> float:
-        return -self.arg.evaluate(lv)
