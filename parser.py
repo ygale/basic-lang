@@ -4,17 +4,7 @@ from copy import copy
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import re
-from typing import (Any, Concatenate, Generic,
-  NoReturn, ParamSpec, TypeVar)
-
-
-# The input to a parser is a sequence of tokens.
-Token = TypeVar('Token')
-Input = TypeVar('Input')
-Input_co = TypeVar('Input_co', covariant=True)
-Output = TypeVar('Output')
-
-P = ParamSpec('P')
+from typing import Concatenate, NoReturn, ParamSpec
 
 @dataclass
 class ParserContext:
@@ -22,8 +12,8 @@ class ParserContext:
     what: str | None = None
 
 @dataclass
-class ParserState(Generic[Input_co]):
-    _input: Input_co
+class ParserState[Input]:
+    _input: Input
     context: ParserContext = field(
         default_factory=ParserContext)
     stack: list[ParserContext] = field(
@@ -62,7 +52,7 @@ class NoParse(Exception):
             f'expected {self.expected} ' +
             f'found {self.found}')
 
-def parse(
+def parse[Input, Output](
         _input: Input,
         parser: Callable[[ParserState[Input]], Output],
         *,
@@ -83,13 +73,13 @@ def parse(
             e.found,
             what)
 
-def ap(
-        parser: Callable[
-            Concatenate[ParserState[Input], P],
-            Output],
-        *args: P.args,
-        **kwargs: P.kwargs
-        ) -> Callable[[ParserState[Input]], Output]:
+def ap[Input, Output, **P](
+      parser: Callable[
+          Concatenate[ParserState[Input], P],
+          Output],
+      *args: P.args,
+      **kwargs: P.kwargs
+      ) -> Callable[[ParserState[Input]], Output]:
     '''Convert a parser with parameters into a
     simple parser by applying all parameters
     except the first.'''
@@ -99,7 +89,7 @@ def ap(
 
 @contextmanager
 def what(s: ParserState, what: str | None
-        ) -> Generator[None, None, None]:
+        ) -> Generator[None]:
     s.push()
     s.context.what = what
     try:
@@ -127,7 +117,7 @@ def fail(
         what=s.context.what if what is None else what
         ) from None
 
-def one(s: ParserState[Sequence[Token]]) -> Token:
+def one[Token](s: ParserState[Sequence[Token]]) -> Token:
     '''Parse any single token.'''
     if len(s._input) > s.context.cursor:
         s.context.cursor += 1
@@ -137,8 +127,8 @@ def one(s: ParserState[Sequence[Token]]) -> Token:
             expected='anything',
             found='end of input')
 
-def the_rest(s: ParserState[Sequence[Token]]
-             ) -> Sequence[Token]:
+def the_rest[Token](s: ParserState[Sequence[Token]]
+                   ) -> Sequence[Token]:
     '''Consume all of the remaining input.'''
     rest: Sequence[Token] = s._input[s.context.cursor:]
     s.context.cursor = len(s._input)
@@ -152,10 +142,10 @@ def end(s: ParserState[Sequence]) -> None:
             expected='end of input',
             found=s._input[s.context.cursor:])
 
-def satisfy(
-        s: ParserState[Sequence[Token]],
-        pred: Callable[[Token], bool]
-        ) -> Token:
+def satisfy[Token](
+      s: ParserState[Sequence[Token]],
+      pred: Callable[[Token], bool]
+      ) -> Token:
     '''Parse a single token that satisfies the
     given predicate.'''
     try:
@@ -171,10 +161,10 @@ def satisfy(
     s.context.cursor += 1
     return tok
 
-def lit(
-        s: ParserState[Sequence[Token]],
-        given: Sequence[Token]
-        ) -> Sequence[Token]:
+def lit[Token](
+      s: ParserState[Sequence[Token]],
+      given: Sequence[Token]
+      ) -> Sequence[Token]:
     '''Parse and consume the given sequence of tokens.
     If the parse fails, no input is consumed.'''
     prefix: Sequence[Token] = s._input[
@@ -187,20 +177,20 @@ def lit(
     s.context.cursor += len(given)
     return prefix
 
-def optional(
-        s: ParserState[Input],
-        parser: Callable[[ParserState[Input]], Output]
-        ) -> Output | None:
+def optional[Input, Output](
+      s: ParserState[Input],
+      parser: Callable[[ParserState[Input]], Output]
+      ) -> Output | None:
     '''Run a parser and return None if it fails.'''
     try:
         return parser(s)
     except NoParse:
         return None
 
-def attempt(
-        s: ParserState[Input],
-        parser: Callable[[ParserState[Input]], Output]
-        ) -> Output:
+def attempt[Input, Output](
+      s: ParserState[Input],
+      parser: Callable[[ParserState[Input]], Output]
+      ) -> Output:
     '''Run a parser, and if it fails, roll back
     ParserState to its previous state'''
     s.push()
@@ -211,11 +201,11 @@ def attempt(
         raise
     return result
 
-def choice(
-        s: ParserState[Input],
-        parsers: Iterable[
-            Callable[[ParserState[Input]], Output]]
-        ) -> Output:
+def choice[Input, Output](
+      s: ParserState[Input],
+      parsers: Iterable[
+        Callable[[ParserState[Input]], Output]]
+      ) -> Output:
     '''Return the result of the first parser that
     succeeds.'''
     expects: list[object] = []
@@ -234,10 +224,10 @@ def choice(
          found=found1)
     return [][0]
 
-def many(
-        s: ParserState[Input],
-        parser: Callable[[ParserState[Input]], Output]
-        ) -> list[Output]:
+def many[Input, Output](
+      s: ParserState[Input],
+      parser: Callable[[ParserState[Input]], Output]
+      ) -> list[Output]:
     '''Run a parser as many times as it succeeds,
     and collect the outputs in a list.'''
     res: list[Output] = []
@@ -247,10 +237,10 @@ def many(
         except NoParse:
             return res
 
-def many1(
-        s: ParserState[Input],
-        parser: Callable[[ParserState[Input]], Output]
-        ) -> list[Output]:
+def many1[Input, Output](
+      s: ParserState[Input],
+      parser: Callable[[ParserState[Input]], Output]
+      ) -> list[Output]:
     '''Run a parser at least once, and as many more
     times after that as it succeeds,
     and collect the outputs in a list.'''
