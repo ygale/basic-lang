@@ -255,11 +255,12 @@ def many1[Input, Output](
 def regex[T: (str, bytes)](
         s: ParserState[T],
         patt: re.Pattern[T],
+        flags: re.RegexFlag = re.NOFLAG
         ) -> tuple[T, list[T]]:
     '''Parse the given compiled regex. Return
     the matched string and the group matches.'''
     m_optional: re.Match[T] | None = patt.match(
-        s._input, s.context.cursor)
+        s._input, s.context.cursor, flags)
     if m_optional is None:
         fail(s,
              expected=patt.pattern,
