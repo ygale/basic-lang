@@ -272,6 +272,14 @@ def regex[T: (str, bytes)](
         s._input[m.start():m.end()],
         [g for g in m.groups()])
 
+def lit_ci[T: (str, bytes)](
+        s: ParserState[T],
+        given: T
+        ) -> T:
+    '''Parse and consume the given case insensitive string.
+    If the parse fails, no input is consumed.'''
+    return regex(s, re.compile(given), re.IGNORECASE)[0]
+
 space_patt: re.Pattern[str] = re.compile(r'\s*')
 bspace_patt: re.Pattern[bytes] = re.compile(b'\\s*')
 def space[T: (str, bytes)](s: ParserState[T]) -> T:
