@@ -103,6 +103,11 @@ def what(s: ParserState, what: str | None
     finally:
         s.pop()
 
+def succeed[Output](_s: object, result: Output) -> Output:
+    '''A parser that always succeeds with the given
+    result.'''
+    return result
+
 def fail(
         s: ParserState,
         expected: object,
