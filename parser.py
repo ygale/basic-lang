@@ -227,7 +227,6 @@ def choice[Input, Output](
             ' or '.join([str(ex) for ex in expects])
             if len(expects) > 0 else 'no choices',
          found=found1)
-    return [][0]
 
 def many[Input, Output](
       s: ParserState[Input],
@@ -253,45 +252,57 @@ def many1[Input, Output](
     res += many(s, parser)
     return res
 
-def regex(
-        s: ParserState[str],
-        patt: re.Pattern[str],
-        ) -> tuple[str, list[str]]:
+def regex[T: (str, bytes)](
+        s: ParserState[T],
+        patt: re.Pattern[T],
+        ) -> tuple[T, list[T]]:
     '''Parse the given compiled regex. Return
-    the matched string and the group matches.:'''
-    m_optional: re.Match[str] | None = patt.match(
+    the matched string and the group matches.'''
+    m_optional: re.Match[T] | None = patt.match(
         s._input, s.context.cursor)
     if m_optional is None:
         fail(s,
              expected=patt.pattern,
              found=s._input[s.context.cursor:])
     else:
-        m: re.Match[str] = m_optional
+        m: re.Match[T] = m_optional
     s.context.cursor += m.end() - m.start()
     return (
         s._input[m.start():m.end()],
         [g for g in m.groups()])
 
 space_patt: re.Pattern[str] = re.compile(r'\s*')
-def space(s: ParserState[str]) -> str:
+bspace_patt: re.Pattern[bytes] = re.compile(b'\\s*')
+def space[T: (str, bytes)](s: ParserState[T]) -> T:
     '''Parse optional whitespace.'''
-    return regex(s, space_patt)[0]
+    if isinstance(s._input, str):
+        return regex(s, space_patt)[0]
+    else:
+        return regex(s, bspace_patt)[0]
 
 space1_patt: re.Pattern[str] = re.compile(r'\s+')
-def space1(s: ParserState[str]) -> str:
+bspace1_patt: re.Pattern[bytes] = re.compile(b'\\s+')
+def space1[T: (str, bytes)](s: ParserState[T]) -> T:
     '''Parse whitespace.'''
     try:
-        return regex(s, space1_patt)[0]
+        if isinstance(s._input, str):
+            return regex(s, space1_patt)[0]
+        else:
+            return regex(s, bspace1_patt)[0]
     except NoParse as e:
         fail(s,
             expected='whitespace',
             found=e.found)
 
 digit1_patt: re.Pattern[str] = re.compile(r'[0-9]+')
-def digit1(s: ParserState[str]) -> str:
+bdigit1_patt: re.Pattern[bytes] = re.compile(b'[0-9]+')
+def digit1[T: (str, bytes)](s: ParserState[T]) -> T:
     '''Parse one or more digits.'''
     try:
-        return regex(s, digit1_patt)[0]
+        if isinstance(s._input, str):
+            return regex(s, digit1_patt)[0]
+        else:
+            return regex(s, bdigit1_patt)[0]
     except NoParse as e:
         fail(s,
             expected='one or more digits',
