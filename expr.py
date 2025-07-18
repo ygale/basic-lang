@@ -43,20 +43,23 @@ class Expr:
         raise NotImplementedError
 
 @dataclass
-class ScalarVar(Expr):
+class Var(Expr):
+    '''A reference to a variable in an expression.'''
+    name: VarName
+
+@dataclass
+class ScalarVar(Var):
     '''A reference to a scalar variable in an
     expression.'''
-    name: VarName
     def pprint(self) -> str:
         return self.name
     def evaluate(self, lv: LookupVar) -> float:
         return lv.lookup_scalar(self.name)
 
 @dataclass
-class ArrayVar(Expr):
+class ArrayVar(Var):
     '''A reference to an element of an array in an
     expression.'''
-    name: VarName
     subscr: Expr
     def pprint(self) -> str:
         return f'{self.name}[{self.subscr.pprint()}]'
@@ -65,8 +68,6 @@ class ArrayVar(Expr):
             name = self.name,
             subscr = self.subscr.evaluate(lv)
         ))
-
-Var = ScalarVar | ArrayVar
 
 @dataclass
 class Num(Expr):
