@@ -4,7 +4,8 @@ from copy import copy
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import re
-from typing import Concatenate, NoReturn, ParamSpec
+from typing import (Concatenate, NoReturn, overload,
+    ParamSpec)
 
 @dataclass
 class ParserContext:
@@ -166,13 +167,21 @@ def satisfy[Token](
     s.context.cursor += 1
     return tok
 
+@overload
+def lit[T: str | bytes](s: ParserState[T], given: T) -> T:
+  ...
+
+@overload
 def lit[Token](
       s: ParserState[Sequence[Token]],
       given: Sequence[Token]
       ) -> Sequence[Token]:
+  ...
+
+def lit(s, given):
     '''Parse and consume the given sequence of tokens.
     If the parse fails, no input is consumed.'''
-    prefix: Sequence[Token] = s._input[
+    prefix = s._input[
         s.context.cursor:
         s.context.cursor + len(given)]
     if prefix != given:
