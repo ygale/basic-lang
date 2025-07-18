@@ -120,3 +120,6 @@ class Ge(BinOp):
               self.arg1.evaluate(lv) >=
               self.arg2.evaluate(lv)
               else FALSE)
+
+all_binops: list[type[BinOp]] = [
+  Plus, Minus, Times, Div, Eq, Ne, Lt, Le, Gt, Ge]

@@ -65,3 +65,6 @@ class Atn(Func):
   name = FuncName('ATN')
   def evaluate(self, lv: LookupVar) -> float:
     return math.atan(self.arg.evaluate(lv))
+
+all_funcs: list[type[Func]] = [
+  Int, Abs, Sgn, Sqr, Log, Exp, Sin, Cos, Tan, Atn]
