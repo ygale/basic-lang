@@ -1,5 +1,5 @@
-from expr import (ArrayVar, Expr, Num, ScalarVar, Var,
-  VarName)
+from expr import (ArrayVar, Expr, Num, Parens, ScalarVar,
+  Var, VarName)
 from func import all_funcs, Func
 from op import all_binops, BinOp, Negate
 from parser import (ap, attempt, choice, digit1, fail,
@@ -78,13 +78,13 @@ def one_op(s: PS, cls: type[BinOp]) -> type[BinOp]:
   lit(s, cls.symbol)
   return cls
 
-def paren_expr(s: PS) -> Expr:
+def paren_expr(s: PS) -> Parens:
   '''Parse an expression in parens.'''
   lit(s, '(')
   expr: Expr = parse_expr(s)
   space(s)
   lit(s, ')')
-  return expr
+  return Parens(expr)
 
 def num_expr(s: PS) -> Num:
   '''Parse a number.'''

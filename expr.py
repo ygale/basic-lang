@@ -77,3 +77,12 @@ class Num(Expr):
         return str(self.val)
     def evaluate(self, _: LookupVar) -> float:
         return self.val
+
+@dataclass
+class Parens(Expr):
+    '''A parenthesized subexpression.'''
+    expr: Expr
+    def pprint(self) -> str:
+        return f'({self.expr.pprint()})'
+    def evaluate(self, lv: LookupVar) -> float:
+        return self.expr.evaluate(lv)
