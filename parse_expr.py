@@ -3,7 +3,8 @@ from expr import (ArrayVar, Expr, Num, ScalarVar, Var,
 from func import all_funcs, Func
 from op import all_binops, BinOp, Negate
 from parser import (ap, attempt, choice, digit1, fail,
-  lit, lit_ci, NoParse, optional, ParserState, regex)
+  lit, lit_ci, NoParse, optional, ParserState, regex,
+  space)
 import re
 
 type PS = ParserState[str]
@@ -16,6 +17,7 @@ def parse_expr(s: PS) -> Expr:
 def non_op(s: PS) -> Expr:
   '''Parse an expression whose top level is not a binary
   operator.'''
+  space(s)
   expr: Expr | None = optional(s, ap(choice, [
     paren_expr,
     num_expr,
@@ -39,6 +41,7 @@ def ops(s: PS, expr: Expr) -> Expr:
     expr2: Expr
     op_cls1: type[BinOp]
     op_cls2: type[BinOp]
+    space(s)
     try:
       op_cls2 = op_class(s)
     except NoParse:
@@ -79,6 +82,7 @@ def paren_expr(s: PS) -> Expr:
   '''Parse an expression in parens.'''
   lit(s, '(')
   expr: Expr = parse_expr(s)
+  space(s)
   lit(s, ')')
   return expr
 
@@ -125,8 +129,10 @@ def func_expr(s: PS) -> Func:
   '''Parse a function call.'''
   func_cls: type[Func] = choice(s,
     [ap(one_func, func) for func in all_funcs])
+  space(s)
   lit(s, '(')
   expr: Expr = parse_expr(s)
+  space(s)
   lit(s, ')')
   return func_cls(expr)
 
@@ -148,12 +154,14 @@ def var_expr(s: PS) -> Var:
 
 def subscript(s: PS) -> Expr:
   '''Parse the subscript of an array variable.'''
+  space(s)
   lit(s, '[')
   expr: Expr = parse_expr(s)
+  space(s)
   lit(s, ']')
   return expr
 
 def neg_expr(s: PS) -> Negate:
   '''Parse a negated expression.'''
   lit(s, '-')
-  return Negate(choice(s, [paren_expr, non_op]))
+  return Negate(non_op(s))
