@@ -263,13 +263,12 @@ def many1[Input, Output](
 
 def regex[T: (str, bytes)](
         s: ParserState[T],
-        patt: re.Pattern[T],
-        flags: re.RegexFlag = re.NOFLAG
+        patt: re.Pattern[T]
         ) -> tuple[T, list[T]]:
     '''Parse the given compiled regex. Return
     the matched string and the group matches.'''
     m_optional: re.Match[T] | None = patt.match(
-        s._input, s.context.cursor, flags)
+        s._input[s.context.cursor:])
     if m_optional is None:
         fail(s,
              expected=patt.pattern,
@@ -287,7 +286,7 @@ def lit_ci[T: (str, bytes)](
         ) -> T:
     '''Parse and consume the given case insensitive string.
     If the parse fails, no input is consumed.'''
-    return regex(s, re.compile(given), re.IGNORECASE)[0]
+    return regex(s, re.compile(given, re.IGNORECASE))[0]
 
 space_patt: re.Pattern[str] = re.compile(r'\s*')
 bspace_patt: re.Pattern[bytes] = re.compile(b'\\s*')
