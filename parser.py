@@ -53,26 +53,54 @@ class NoParse(Exception):
             f'expected {self.expected} ' +
             f'found {self.found}')
 
-def parse[Input, Output](
+def parse_with_state[Input, Output](
         _input: Input,
         parser: Callable[[ParserState[Input]], Output],
         *,
         what: str | None = None
-        ) -> Output:
-    'Run the parser on the given input.'
-    state = ParserState(
+        ) -> tuple[Output, ParserState[Input]]:
+    '''Run the parser on the given input. Return the output
+    and the final state.'''
+    state: ParserState[Input] = ParserState(
         _input, ParserContext(what=what))
     try:
-        return parser(state)
+      return (parser(state), state)
     except NoParse as e:
         if state.context.what is not None:
-            what = state.context.what
-        else:
-            what = e.what
-        fail(state,
-            e.expected,
-            e.found,
-            what)
+            e.what = state.context.what
+        raise e
+
+def parse[Token, Output](
+        _input: Sequence[Token],
+        parser: Callable[
+          [ParserState[Sequence[Token]]],
+          Output],
+        *,
+        what: str | None = None
+        ) -> Output:
+    '''Run the parser on the given input.'''
+    outp: Output
+    state: ParserState[Sequence[Token]]
+    outp, state = parse_with_state(
+      _input, parser, what=what)
+    end(state)
+    return outp
+
+def parse_initial[Token, Output](
+        _input: Sequence[Token],
+        parser: Callable[
+          [ParserState[Sequence[Token]]],
+          Output],
+        *,
+        what: str | None = None
+        ) -> tuple[Output, Sequence[Token]]:
+    '''Run the parser on the initial portion of the given
+    input. Return the output and the leftover input.'''
+    outp: Output
+    state: ParserState[Sequence[Token]]
+    outp, state = parse_with_state(
+      _input, parser, what=what)
+    return (outp, state._input[state.context.cursor:])
 
 def ap[Input, Output, **P](
       parser: Callable[
