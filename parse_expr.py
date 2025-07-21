@@ -141,11 +141,12 @@ def one_func(s: PS, cls: type[Func]) -> type[Func]:
   lit_ci(s, cls.name)
   return cls
 
-varname_patt: re.Pattern[str] = re.compile('[A-Z][0-9]?')
+varname_patt: re.Pattern[str] = re.compile(
+  '[A-Z][0-9]?', re.IGNORECASE)
 def var_expr(s: PS) -> Var:
   '''Parse a reference to a variable.'''
   name: VarName = VarName(
-    regex(s, varname_patt, re.IGNORECASE)[0].upper())
+    regex(s, varname_patt)[0].upper())
   try:
     subscr: Expr = attempt(s, subscript)
     return ArrayVar(name, subscr)
