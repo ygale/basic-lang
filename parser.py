@@ -134,13 +134,13 @@ def one[Token](s: ParserState[Sequence[Token]]) -> Token:
             found='end of input')
 
 def the_rest[Token](s: ParserState[Sequence[Token]]
-                   ) -> Sequence[Token]:
+      ) -> Sequence[Token]:
     '''Consume all of the remaining input.'''
     rest: Sequence[Token] = s._input[s.context.cursor:]
     s.context.cursor = len(s._input)
     return rest
 
-def end(s: ParserState[Sequence]) -> None:
+def end[Input: Sequence](s: ParserState[Input]) -> None:
     '''A parser that succeeds if there is no more
     input.'''
     if s.context.cursor < len(s._input):
