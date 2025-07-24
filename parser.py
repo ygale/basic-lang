@@ -317,7 +317,9 @@ def lit_ci[T: (str, bytes)](
         ) -> T:
     '''Parse and consume the given case insensitive string.
     If the parse fails, no input is consumed.'''
-    return regex(s, re.compile(given, re.IGNORECASE))[0]
+    return regex(s,
+      re.compile(re.escape(given), re.IGNORECASE)
+      )[0]
 
 space_patt: re.Pattern[str] = re.compile(r'\s*')
 bspace_patt: re.Pattern[bytes] = re.compile(b'\\s*')
