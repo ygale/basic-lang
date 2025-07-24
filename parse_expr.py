@@ -89,6 +89,7 @@ def paren_expr(s: PS) -> Parens:
 def num_expr(s: PS) -> Num:
   '''Parse a number.'''
   int_part: str = ''
+  point: str = ''
   frac_part: str = ''
   exp_part: str = ''
   try:
@@ -96,8 +97,8 @@ def num_expr(s: PS) -> Num:
   except NoParse:
     pass
   try:
-    frac_part = lit(s, '.')
-    frac_part += digit1(s)
+    point = lit(s, '.')
+    frac_part = digit1(s)
   except:
     pass
   if len(int_part) + len(frac_part) == 0:
@@ -108,7 +109,8 @@ def num_expr(s: PS) -> Num:
     exp_part = attempt(s, exponent)
   except NoParse:
     pass
-  num_str: str = int_part + frac_part + exp_part
+  num_str: str = ''.join([
+    int_part, point, frac_part, exp_part])
   try:
     return Num(float(num_str))
   except ValueError:
