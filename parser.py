@@ -238,6 +238,7 @@ def attempt[Input, Output](
     s.push()
     try:
         result = parser(s)
+        s.stack.pop()
     except NoParse:
         s.pop()
         raise
