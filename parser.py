@@ -294,19 +294,21 @@ def regex[T: (str, bytes)](
         s: ParserState[T],
         patt: re.Pattern[T]
         ) -> tuple[T, list[T]]:
-    '''Parse the given compiled regex. Return
-    the matched string and the group matches.'''
+    '''Parse the given compiled regex. Return the matched
+    string and the group matches. No input is consumed if
+    the regex does not match.'''
+    start: int = s.context.cursor
     m_optional: re.Match[T] | None = patt.match(
-        s._input[s.context.cursor:])
+        s._input[start:])
     if m_optional is None:
         fail(s,
              expected=patt.pattern,
-             found=s._input[s.context.cursor:])
+             found=s._input[start:])
     else:
         m: re.Match[T] = m_optional
-    s.context.cursor += m.end() - m.start()
+    s.context.cursor += m.end()
     return (
-        s._input[m.start():m.end()],
+        s._input[start:start+m.end()],
         [g for g in m.groups()])
 
 def lit_ci[T: (str, bytes)](
