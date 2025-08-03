@@ -195,21 +195,13 @@ def satisfy[Token](
     s.context.cursor += 1
     return tok
 
-@overload
-def lit[T: str | bytes](s: ParserState[T], given: T) -> T:
-  ...
-
-@overload
-def lit[Token](
-      s: ParserState[Sequence[Token]],
-      given: Sequence[Token]
-      ) -> Sequence[Token]:
-  ...
-
-def lit(s, given):
+def lit[Input: (str, bytes)](
+      s: ParserState[Input],
+      given: Input
+      ) -> Input:
     '''Parse and consume the given sequence of tokens.
     If the parse fails, no input is consumed.'''
-    prefix = s._input[
+    prefix: Input = s._input[
         s.context.cursor:
         s.context.cursor + len(given)]
     if prefix != given:
