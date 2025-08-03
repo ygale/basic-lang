@@ -184,6 +184,36 @@ def oneOf[Token](
     s.context.cursor += 1
     return tok
 
+def manyOf(
+      s: ParserState[str],
+      given: Iterable[str]
+      ) -> str:
+    '''Parse zero or more of the given characters.'''
+    cursor: int = s.context.cursor
+    while (cursor < len(s._input) and
+          s._input[cursor] in given):
+        cursor += 1
+    cursor, s.context.cursor = s.context.cursor, cursor
+    return s._input[cursor:s.context.cursor]
+
+def manyOf1(
+      s: ParserState[str],
+      given: Iterable[str]
+      ) -> str:
+    '''Parse one or more of the given characters.'''
+    cursor: int = s.context.cursor
+    while (cursor < len(s._input) and
+          s._input[cursor] in given):
+        cursor += 1
+    if cursor == s.context.cursor:
+        givens: str = ', '.join(
+        str(g) for g in given)
+        fail(s,
+            expected='at least one of {givens}',
+            found='none')
+    cursor, s.context.cursor = s.context.cursor, cursor
+    return s._input[cursor:s.context.cursor]
+
 def the_rest[Token](s: ParserState[Sequence[Token]]
       ) -> Sequence[Token]:
     '''Consume all of the remaining input.'''
