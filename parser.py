@@ -151,15 +151,38 @@ def fail(
         what=s.context.what if what is None else what
         ) from None
 
-def one[Token](s: ParserState[Sequence[Token]]) -> Token:
+def one[Token](
+      s: ParserState[Sequence[Token]]
+      ) -> Token:
     '''Parse any single token.'''
-    if len(s._input) > s.context.cursor:
-        s.context.cursor += 1
-        return s._input[s.context.cursor - 1]
-    else:
+    if s.context.cursor >= len(s._input):
         fail(s,
             expected='anything',
             found='end of input')
+    tok: Token = s._input[s.context.cursor]
+    s.context.cursor += 1
+    return tok
+
+def oneOf[Token](
+      s: ParserState[Sequence[Token]],
+      given: Iterable[Token]
+      ) -> Token:
+    '''Parse one of the given tokens.'''
+    if s.context.cursor >= len(s._input):
+        givens1: str = ', '.join(
+          str(g) for g in given)
+        fail(s,
+            expected='one of {givens1}',
+            found='end of input')
+    tok: Token = s._input[s.context.cursor]
+    if tok not in given:
+        givens2: str = ', '.join(
+          str(g) for g in given)
+        fail(s,
+            expected='one of {givens2}',
+            found='something else')
+    s.context.cursor += 1
+    return tok
 
 def the_rest[Token](s: ParserState[Sequence[Token]]
       ) -> Sequence[Token]:
