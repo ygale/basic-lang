@@ -27,7 +27,7 @@ def non_op(s: PS) -> Expr:
   if expr is None:
     fail(s,
          expected='expression',
-         found=s._input[s.context.cursor:])
+         found=s._input[s.cursor:])
   else:
     return expr
 
@@ -55,7 +55,7 @@ def ops(s: PS, expr: Expr) -> Expr:
     except NoParse:
       fail(s,
            expected=f'expression after "{op_cls2.symbol}"',
-           found=s._input[s.context.cursor:])
+           found=s._input[s.cursor:])
     # pop the stack until the top has strictly lower
     # precedence than the one we found, or until the stack
     # is empty. then push the one we found onto the stack.
@@ -103,8 +103,8 @@ def num_expr(s: PS) -> Num:
     pass
   if len(int_part) + len(frac_part) == 0:
     fail(s,
-      expected=f'number',
-      found=s._input[s.context.cursor:])
+      expected='number',
+      found=s._input[s.cursor:])
   try:
     exp_part = attempt(s, exponent)
   except NoParse:
@@ -114,7 +114,7 @@ def num_expr(s: PS) -> Num:
   try:
     return Num(float(num_str))
   except ValueError:
-    fail(s, expected=f'number', found=num_str)
+    fail(s, expected='number', found=num_str)
 
 def exponent(s: PS) -> str:
   '''Parse the exponent part of a numetic litetal.'''

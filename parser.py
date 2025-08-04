@@ -4,38 +4,17 @@ from copy import copy
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import re
-from typing import (Concatenate, NoReturn, overload,
-    ParamSpec)
-
-@dataclass
-class ParserContext:
-    cursor: int = 0
-    what: str | None = None
+from typing import Concatenate, NoReturn, ParamSpec
 
 @dataclass
 class ParserState[Input]:
     _input: Input
-    context: ParserContext = field(
-        default_factory=ParserContext)
-    stack: list[ParserContext] = field(
+    cursor: int = 0
+    what: str | None = None
+    cursor_stack: list[int] = field(
         default_factory=list)
-
-    def push(self) -> None:
-        '''Push the current context onto the stack.
-        and create a copy of it to use as the
-        current context.'''
-        self.stack.append(self.context)
-        self.context = copy(self.context)
-
-    def pop(self) -> None:
-        '''Pop the last previous context from the stack,
-        and restore it as the new current context.'''
-        try:
-            self.context = self.stack[-1]
-        except IndexError:
-            raise ValueError(
-                'Cannot pop empty ParserState stack')
-        self.stack.pop() 
+    what_stack: list[str | None] = field(
+        default_factory=list)
 
 @dataclass
 class NoParse(Exception):
@@ -62,12 +41,12 @@ def parse_with_state[Input, Output](
     '''Run the parser on the given input. Return the output
     and the final state.'''
     state: ParserState[Input] = ParserState(
-        _input, ParserContext(what=what))
+        _input, what=what)
     try:
       return (parser(state), state)
     except NoParse as e:
-        if state.context.what is not None:
-            e.what = state.context.what
+        if state.what is not None:
+            e.what = state.what
         raise e
 
 def parse[Token, Output](
@@ -100,7 +79,7 @@ def parse_initial[Token, Output](
     state: ParserState[Sequence[Token]]
     outp, state = parse_with_state(
       _input, parser, what=what)
-    return (outp, state._input[state.context.cursor:])
+    return (outp, state._input[state.cursor:])
 
 def ap[Input, Output, **P](
       parser: Callable[
@@ -119,8 +98,8 @@ def ap[Input, Output, **P](
 @contextmanager
 def what(s: ParserState, what: str | None
         ) -> Generator[None]:
-    s.push()
-    s.context.what = what
+    s.what_stack.append(s.what)
+    s.what = what
     try:
         yield
     except NoParse as e:
@@ -130,7 +109,8 @@ def what(s: ParserState, what: str | None
                      else e.expected,
             found=e.found)
     finally:
-        s.pop()
+        s.what = s.what_stack[-1]
+        s.what_stack.pop()
 
 def succeed[Output](_s: object, result: Output) -> Output:
     '''A parser that always succeeds with the given
@@ -145,22 +125,22 @@ def fail(
         ) -> NoReturn:
     '''A parser that always fails.'''
     raise NoParse(
-        position=s.context.cursor,
+        position=s.cursor,
         expected=expected,
         found=found,
-        what=s.context.what if what is None else what
+        what=s.what if what is None else what
         ) from None
 
 def one[Token](
       s: ParserState[Sequence[Token]]
       ) -> Token:
     '''Parse any single token.'''
-    if s.context.cursor >= len(s._input):
+    if s.cursor >= len(s._input):
         fail(s,
             expected='anything',
             found='end of input')
-    tok: Token = s._input[s.context.cursor]
-    s.context.cursor += 1
+    tok: Token = s._input[s.cursor]
+    s.cursor += 1
     return tok
 
 def oneOf[Token](
@@ -168,20 +148,20 @@ def oneOf[Token](
       given: Iterable[Token]
       ) -> Token:
     '''Parse one of the given tokens.'''
-    if s.context.cursor >= len(s._input):
+    if s.cursor >= len(s._input):
         givens1: str = ', '.join(
           str(g) for g in given)
         fail(s,
             expected='one of {givens1}',
             found='end of input')
-    tok: Token = s._input[s.context.cursor]
+    tok: Token = s._input[s.cursor]
     if tok not in given:
         givens2: str = ', '.join(
           str(g) for g in given)
         fail(s,
             expected='one of {givens2}',
             found='something else')
-    s.context.cursor += 1
+    s.cursor += 1
     return tok
 
 def manyOf(
@@ -189,45 +169,45 @@ def manyOf(
       given: Iterable[str]
       ) -> str:
     '''Parse zero or more of the given characters.'''
-    cursor: int = s.context.cursor
+    cursor: int = s.cursor
     while (cursor < len(s._input) and
           s._input[cursor] in given):
         cursor += 1
-    cursor, s.context.cursor = s.context.cursor, cursor
-    return s._input[cursor:s.context.cursor]
+    cursor, s.cursor = s.cursor, cursor
+    return s._input[cursor:s.cursor]
 
 def manyOf1(
       s: ParserState[str],
       given: Iterable[str]
       ) -> str:
     '''Parse one or more of the given characters.'''
-    cursor: int = s.context.cursor
+    cursor: int = s.cursor
     while (cursor < len(s._input) and
           s._input[cursor] in given):
         cursor += 1
-    if cursor == s.context.cursor:
+    if cursor == s.cursor:
         givens: str = ', '.join(
         str(g) for g in given)
         fail(s,
             expected='at least one of {givens}',
             found='none')
-    cursor, s.context.cursor = s.context.cursor, cursor
-    return s._input[cursor:s.context.cursor]
+    cursor, s.cursor = s.cursor, cursor
+    return s._input[cursor:s.cursor]
 
 def the_rest[Token](s: ParserState[Sequence[Token]]
       ) -> Sequence[Token]:
     '''Consume all of the remaining input.'''
-    rest: Sequence[Token] = s._input[s.context.cursor:]
-    s.context.cursor = len(s._input)
+    rest: Sequence[Token] = s._input[s.cursor:]
+    s.cursor = len(s._input)
     return rest
 
 def end[Input: Sequence](s: ParserState[Input]) -> None:
     '''A parser that succeeds if there is no more
     input.'''
-    if s.context.cursor < len(s._input):
+    if s.cursor < len(s._input):
         fail(s,
             expected='end of input',
-            found=s._input[s.context.cursor:])
+            found=s._input[s.cursor:])
 
 def satisfy[Token](
       s: ParserState[Sequence[Token]],
@@ -236,7 +216,7 @@ def satisfy[Token](
     '''Parse a single token that satisfies the
     given predicate.'''
     try:
-        tok: Token = s._input[s.context.cursor]
+        tok: Token = s._input[s.cursor]
     except IndexError:
         fail(s,
             expected=f'satisfies {str(pred)}',
@@ -245,7 +225,7 @@ def satisfy[Token](
         fail(s,
             expected=f'satisfies {str(pred)}',
             found=tok)
-    s.context.cursor += 1
+    s.cursor += 1
     return tok
 
 def lit[Input: (str, bytes)](
@@ -255,13 +235,13 @@ def lit[Input: (str, bytes)](
     '''Parse and consume the given sequence of tokens.
     If the parse fails, no input is consumed.'''
     prefix: Input = s._input[
-        s.context.cursor:
-        s.context.cursor + len(given)]
+        s.cursor:
+        s.cursor + len(given)]
     if prefix != given:
         fail(s,
             expected = given,
             found = prefix)
-    s.context.cursor += len(given)
+    s.cursor += len(given)
     return prefix
 
 def optional[Input, Output](
@@ -280,14 +260,14 @@ def attempt[Input, Output](
       ) -> Output:
     '''Run a parser, and if it fails, roll back
     ParserState to its previous state'''
-    s.push()
+    s.cursor_stack.append(s.cursor)
     try:
-        result = parser(s)
-        s.stack.pop()
+        return parser(s)
     except NoParse:
-        s.pop()
+        s.cursor = s.cursor_stack[-1]
         raise
-    return result
+    finally:
+        s.cursor_stack.pop()
 
 def choice[Input, Output](
       s: ParserState[Input],
@@ -342,7 +322,7 @@ def regex[T: (str, bytes)](
     '''Parse the given compiled regex. Return the matched
     string and the group matches. No input is consumed if
     the regex does not match.'''
-    start: int = s.context.cursor
+    start: int = s.cursor
     m_optional: re.Match[T] | None = patt.match(
         s._input[start:])
     if m_optional is None:
@@ -351,7 +331,7 @@ def regex[T: (str, bytes)](
              found=s._input[start:])
     else:
         m: re.Match[T] = m_optional
-    s.context.cursor += m.end()
+    s.cursor += m.end()
     return (
         s._input[start:start+m.end()],
         [g for g in m.groups()])
