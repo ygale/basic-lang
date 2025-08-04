@@ -2,10 +2,9 @@ from expr import (ArrayVar, Expr, Num, Parens, ScalarVar,
   Var, VarName)
 from func import all_funcs, Func
 from op import all_binops, BinOp, Negate
-from parser import (ap, attempt, choice, digit1, fail,
-  lit, lit_ci, NoParse, optional, ParserState, regex,
-  space)
-import re
+from parser import (ap, attempt, choice, fail, lit,
+  lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
+  ParserState, space, what)
 
 type PS = ParserState[str]
 
@@ -86,20 +85,45 @@ def paren_expr(s: PS) -> Parens:
   lit(s, ')')
   return Parens(expr)
 
+def char_range(_from: str, to: str) -> set[str]:
+  '''An inclusive range of characters.'''
+  return set(
+    chr(i) for i in range(ord(_from), ord(to) + 1))
+
+ascii_digit_range: set[str] = char_range('0', '9')
+ascii_letter_range: set[str] = (
+  char_range('A', 'Z') | char_range('a', 'z'))
+
+def ascii_digit(s: ParserState[str]) -> str:
+  '''Parse an ASCII digit.'''
+  with what(s, 'ascii digit'):
+    return oneOf(s, ascii_digit_range)
+
+def ascii_digits(s: ParserState[str]) -> str:
+  '''Parse zero or more ASCII digits.'''
+  with what(s, 'zero or more ascii digits'):
+    return manyOf(s, ascii_digit_range)
+
+def ascii_digits1(s: ParserState[str]) -> str:
+  '''Parse one or more ASCII digits.'''
+  with what(s, 'one or more ascii digits'):
+    return manyOf1(s, ascii_digit_range)
+
+def ascii_letter(s: ParserState[str]) -> str:
+  '''Parse an ASCII letter.'''
+  with what(s, 'ascii letter'):
+    return oneOf(s, ascii_letter_range)
+
 def num_expr(s: PS) -> Num:
   '''Parse a number.'''
-  int_part: str = ''
+  int_part: str = ascii_digits(s)
   point: str = ''
   frac_part: str = ''
   exp_part: str = ''
   try:
-    int_part = digit1(s)
-  except NoParse:
-    pass
-  try:
     point = lit(s, '.')
-    frac_part = digit1(s)
-  except:
+    frac_part = ascii_digits(s)
+  except NoParse:
     pass
   if len(int_part) + len(frac_part) == 0:
     fail(s,
@@ -124,7 +148,7 @@ def exponent(s: PS) -> str:
       [ap(lit, sgn) for sgn in '+-'])
   except NoParse:
     pass
-  exp_part += digit1(s)
+  exp_part += ascii_digits1(s)
   return exp_part
 
 def func_expr(s: PS) -> Func:
@@ -143,12 +167,13 @@ def one_func(s: PS, cls: type[Func]) -> type[Func]:
   lit_ci(s, cls.name)
   return cls
 
-varname_patt: re.Pattern[str] = re.compile(
-  '[A-Z][0-9]?', re.IGNORECASE)
 def var_expr(s: PS) -> Var:
   '''Parse a reference to a variable.'''
-  name: VarName = VarName(
-    regex(s, varname_patt)[0].upper())
+  name: VarName = VarName(ascii_letter(s).upper())
+  try:
+    name = VarName(name + ascii_digit(s))
+  except NoParse:
+    pass
   try:
     subscr: Expr = attempt(s, subscript)
     return ArrayVar(name, subscr)
