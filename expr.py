@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import modf
 from typing import NewType
 
 VarName = NewType('VarName', str)
@@ -74,6 +75,9 @@ class Num(Expr):
     '''A numeric literal.'''
     val: float
     def pprint(self) -> str:
+      if modf(self.val)[0] == 0.0:
+        return str(int(self.val))
+      else:
         return str(self.val)
     def evaluate(self, _: LookupVar) -> float:
         return self.val
