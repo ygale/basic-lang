@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
@@ -13,6 +14,7 @@ class Stmt:
     name: ClassVar[StmtName]
     line_num: LineNum
 
+    @abstractmethod
     def pprint_tokens(self) -> Iterator[str]:
       '''Space-sepatated tokens for pretty-printing the
       statement. The line number and statement name are
@@ -85,10 +87,14 @@ class PrintSep(StrEnum):
 @dataclass
 class PrintItem:
   '''An item in a PRINT statement.'''
+
+  @abstractmethod
   def pprint(self) -> str:
     raise NotImplementedError
-  def pprint_print_item(self, sep: PrintSep | None = None
-                       ) -> str:
+
+  def pprint_print_item(self,
+      sep: PrintSep | None = None
+      ) -> str:
     if sep is None:
       return self.pprint()
     else:
