@@ -176,6 +176,19 @@ def manyOf(
     cursor, s.cursor = s.cursor, cursor
     return s._input[cursor:s.cursor]
 
+def manyNotOf(
+      s: ParserState[str],
+      given: Iterable[str]
+      ) -> str:
+    '''Parse zero or more characters other than the
+    given ones.'''
+    cursor: int = s.cursor
+    while (cursor < len(s._input) and
+          s._input[cursor] not in given):
+        cursor += 1
+    cursor, s.cursor = s.cursor, cursor
+    return s._input[cursor:s.cursor]
+
 def manyOf1(
       s: ParserState[str],
       given: Iterable[str]
