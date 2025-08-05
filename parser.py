@@ -317,6 +317,37 @@ def many[Input, Output](
         except NoParse:
             return res
 
+def sepBy[Input, Output](
+      s: ParserState[Input],
+      sep: Callable[[ParserState[Input]], object],
+      parser: Callable[[ParserState[Input]], Output]
+      ) -> list[Output]:
+    '''Zero or more occurrences of parser separated by
+    sep. The separators are not included in the
+    output.'''
+    try:
+        res: list[Output] = [parser(s)]
+    except NoParse:
+        return []
+    while True:
+        try:
+            res.append(
+              attempt(s,
+                ap(parse_tuple, sep, parser)
+              )[1]
+            )
+        except NoParse:
+            return res
+
+def parse_tuple[Input, Output0, Output1](
+      s: ParserState[Input],
+      parser0: Callable[[ParserState[Input]], Output0],
+      parser1: Callable[[ParserState[Input]], Output1]
+      ) -> tuple[Output0, Output1]:
+    '''Run two parsers and return their outputs as a
+    tuple'''
+    return (parser0(s), parser1(s))
+
 def many1[Input, Output](
       s: ParserState[Input],
       parser: Callable[[ParserState[Input]], Output]
