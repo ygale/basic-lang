@@ -116,6 +116,10 @@ def ascii_letter(s: ParserState[str]) -> str:
 
 def num_expr(s: PS) -> Num:
   '''Parse a number.'''
+  return Num(parse_num(s))
+
+def parse_num(s: PS) -> float:
+  '''Parse a number.'''
   int_part: str = ascii_digits(s)
   point: str = ''
   frac_part: str = ''
@@ -136,7 +140,7 @@ def num_expr(s: PS) -> Num:
   num_str: str = ''.join([
     int_part, point, frac_part, exp_part])
   try:
-    return Num(float(num_str))
+    return float(num_str)
   except ValueError:
     fail(s, expected='number', found=num_str)
 
@@ -167,13 +171,18 @@ def one_func(s: PS, cls: type[Func]) -> type[Func]:
   lit_ci(s, cls.name)
   return cls
 
-def var_expr(s: PS) -> Var:
-  '''Parse a reference to a variable.'''
-  name: VarName = VarName(ascii_letter(s).upper())
+def var_name(s: PS) -> VarName:
+  '''Parse a variable name.'''
+  name: str = ascii_letter(s).upper()
   try:
-    name = VarName(name + ascii_digit(s))
+    name += ascii_digit(s)
   except NoParse:
     pass
+  return VarName(name)
+
+def var_expr(s: PS) -> Var:
+  '''Parse a reference to a variable.'''
+  name: VarName = var_name(s)
   try:
     subscr: Expr = attempt(s, subscript)
     return ArrayVar(name, subscr)
