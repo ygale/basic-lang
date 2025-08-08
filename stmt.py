@@ -7,7 +7,7 @@ from parse_expr import (ascii_digits1, parse_expr,
   parse_num, var_expr, var_name)
 from parser import (ap, choice, end, fail, lit, lit_ci,
   many, manyNotOf, NoParse, optional, ParserState,
-  sepBy, space)
+  sepBy, space, the_rest)
 from typing import ClassVar, NewType, Self
 
 from expr import Expr, ScalarVar, Var, VarName
@@ -220,7 +220,7 @@ class PrintString(PrintItem):
   @classmethod
   def parse(this, s: ParserState[str]) -> Self:
     lit(s, '"')
-    pstr: str = manyNotOf(s, '"\n\r')
+    pstr: str = manyNotOf(s, '"')
     lit(s, '"')
     return this(pstr)
 
@@ -391,7 +391,7 @@ class Rem(Stmt):
         s: ParserState[str],
         line_num: LineNum
         ) -> Self:
-      return this(line_num, manyNotOf(s, '\n\r'))
+      return this(line_num, the_rest(s))
 
 @dataclass
 class Stop(Stmt):
