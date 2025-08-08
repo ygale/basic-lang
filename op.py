@@ -16,15 +16,26 @@ class Op(Expr):
       return self.pprint()
 
 @dataclass
-class Negate(Op):
+class UnaryOp(Op):
   arg: Expr
-  symbol = Symbol('-')
   precedence = 4
   def pprint(self) -> str:
     return (self.symbol +
             self.arg.pprint_prec(self.precedence))
+
+@dataclass
+class Negate(UnaryOp):
+  symbol = Symbol('-')
   def evaluate(self, lv: LookupVar) -> float:
     return -self.arg.evaluate(lv)
+
+@dataclass
+class Positive(UnaryOp):
+  symbol = Symbol('+')
+  def evaluate(self, lv: LookupVar) -> float:
+    return self.arg.evaluate(lv)
+
+all_unaryops: list[type[UnaryOp]] = [Negate, Positive]
 
 @dataclass
 class BinOp(Op):

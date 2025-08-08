@@ -1,7 +1,7 @@
 from expr import (ArrayVar, Expr, Num, Parens, ScalarVar,
   Var, VarName)
 from func import all_funcs, Func
-from op import all_binops, BinOp, Negate
+from op import all_binops, all_unaryops, BinOp, UnaryOp
 from parser import (ap, attempt, choice, fail, lit,
   lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
   ParserState, space, what)
@@ -22,7 +22,7 @@ def non_op(s: PS) -> Expr:
     num_expr,
     func_expr,
     var_expr,
-    neg_expr]))
+    unary_expr]))
   if expr is None:
     fail(s,
          expected='expression',
@@ -167,7 +167,8 @@ def func_expr(s: PS) -> Func:
   return func_cls(expr)
 
 def one_func(s: PS, cls: type[Func]) -> type[Func]:
-  '''Parse the name of a function and return its class.'''
+  '''Parse the name of a function and return its
+  class.'''
   lit_ci(s, cls.name)
   return cls
 
@@ -198,7 +199,19 @@ def subscript(s: PS) -> Expr:
   lit(s, ']')
   return expr
 
-def neg_expr(s: PS) -> Negate:
-  '''Parse a negated expression.'''
+def unary_expr(s: PS) -> UnaryOp:
+  '''Parse a unary operator expression.'''
+  unaryop_cls: type[UnaryOp] = choice(s,
+    [ap(one_unaryop, unaryop)
+      for unaryop in all_unaryops])
   lit(s, '-')
-  return Negate(non_op(s))
+  return unaryop_cls(non_op(s))
+
+def one_unaryop(
+    s: PS,
+    cls: type[UnaryOp]
+    ) -> type[UnaryOp]:
+  '''Parse the symbol of a unary operator and return its
+  class.'''
+  lit(s, cls.symbol)
+  return cls
