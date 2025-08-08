@@ -207,10 +207,9 @@ def manyOf1(
     cursor, s.cursor = s.cursor, cursor
     return s._input[cursor:s.cursor]
 
-def the_rest[Token](s: ParserState[Sequence[Token]]
-      ) -> Sequence[Token]:
+def the_rest(s: ParserState[str]) -> str:
     '''Consume all of the remaining input.'''
-    rest: Sequence[Token] = s._input[s.cursor:]
+    rest: str = s._input[s.cursor:]
     s.cursor = len(s._input)
     return rest
 
