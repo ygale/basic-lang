@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from exceptions import EvalError
 import math
 from typing import ClassVar, NewType
 
@@ -34,12 +35,30 @@ class Sgn(Func):
 class Sqr(Func):
   name = FuncName('SQR')
   def evaluate(self, lv: LookupVar) -> float:
-    return math.sqrt(self.arg.evaluate(lv))
+    arg: float = self.arg.evaluate(lv)
+    try:
+      return math.sqrt(arg)
+    except ValueError:
+      if arg < 0.0:
+        raise EvalError('SQR of a negative number')
+      else:
+        # should never happen
+        raise EvalError('SQR of an invalid number')
 
 class Log(Func):
   name = FuncName('LOG')
   def evaluate(self, lv: LookupVar) -> float:
-    return math.log(self.arg.evaluate(lv))
+    arg: float = self.arg.evaluate(lv)
+    try:
+      return math.log(arg)
+    except ValueError:
+      if arg == 0.0:
+        raise EvalError('LOG of zero')
+      elif arg < 0.0:
+        raise EvalError('LOG of a negative number')
+      else:
+        # should never happen
+        raise EvalError('LOG of an invalid number')
 
 class Exp(Func):
   name = FuncName('EXP')

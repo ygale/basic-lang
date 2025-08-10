@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from exceptions import EvalError
 from typing import ClassVar, NewType
 
 from expr import Expr, LookupVar
@@ -51,29 +52,32 @@ class Plus(BinOp):
   symbol = Symbol('+')
   precedence = 2
   def evaluate(self, lv: LookupVar) -> float:
-      return (self.arg1.evaluate(lv) +
-              self.arg2.evaluate(lv))
+    return (self.arg1.evaluate(lv) +
+            self.arg2.evaluate(lv))
 
 class Minus(BinOp):
   symbol = Symbol('-')
   precedence = 2
   def evaluate(self, lv: LookupVar) -> float:
-      return (self.arg1.evaluate(lv) -
-              self.arg2.evaluate(lv))
+    return (self.arg1.evaluate(lv) -
+            self.arg2.evaluate(lv))
 
 class Times(BinOp):
   symbol = Symbol('*')
   precedence = 3
   def evaluate(self, lv: LookupVar) -> float:
-      return (self.arg1.evaluate(lv) *
-              self.arg2.evaluate(lv))
+    return (self.arg1.evaluate(lv) *
+            self.arg2.evaluate(lv))
 
 class Div(BinOp):
   symbol = Symbol('/')
   precedence = 3
   def evaluate(self, lv: LookupVar) -> float:
+    try:
       return (self.arg1.evaluate(lv) /
               self.arg2.evaluate(lv))
+    except ZeroDivisionError:
+      raise EvalError('division by zero')
 
 TRUE:  float = 1.0
 FALSE: float = 0.0
@@ -82,55 +86,55 @@ class Eq(BinOp):
   symbol = Symbol('=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) == 
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) ==
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 class Ne(BinOp):
   symbol = Symbol('<>')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) != 
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) !=
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 class Lt(BinOp):
   symbol = Symbol('<')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) <
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) <
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 class Le(BinOp):
   symbol = Symbol('<=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) <=
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) <=
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 class Gt(BinOp):
   symbol = Symbol('>')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) >
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) >
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 class Ge(BinOp):
   symbol = Symbol('>=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-      return (TRUE if
-              self.arg1.evaluate(lv) >=
-              self.arg2.evaluate(lv)
-              else FALSE)
+    return (TRUE if
+            self.arg1.evaluate(lv) >=
+            self.arg2.evaluate(lv)
+            else FALSE)
 
 all_binops: list[type[BinOp]] = [
   Plus, Minus, Times, Div, Eq, Ne, Lt, Le, Gt, Ge]

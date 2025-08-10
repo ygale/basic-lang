@@ -2,7 +2,8 @@ from abc import abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
-from expr import Expr
+from exceptions import EvalError, RTError
+from expr import Expr, LookupVar
 from parse_expr import (ascii_digits1, parse_expr,
   parse_num, var_expr, var_name)
 from parser import (ap, choice, end, fail, lit, lit_ci,
@@ -54,6 +55,20 @@ class Stmt:
       lit_ci(s, this.name)
       space(s)
       return this.parse_body(s, line_num)
+
+    def eval_expr(
+        self,
+        lv: LookupVar,
+        expr: Expr
+        ) -> float:
+      try:
+        return expr.evaluate(lv)
+      except EvalError as e:
+        raise RTError(self.line_num, str(e))
+      except Exception as e:
+        # if this happens, figure out how to catch it
+        raise RTError(self.line_num,
+          f'expression: {repr(e)}')
 
 @dataclass
 class Let(Stmt):

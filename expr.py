@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from math import modf
 from typing import NewType
 
 VarName = NewType('VarName', str)
@@ -14,7 +13,8 @@ class ArrayElt:
 
 class LookupVar:
     '''A symbol table for looking up the values of
-    variables while evaluating an expression.'''
+    variables while evaluating an expression.
+    Raises EvalError if the variable is undefined.'''
     @abstractmethod
     def lookup_scalar(self, var: VarName) -> float:
         raise NotImplementedError
@@ -75,7 +75,7 @@ class Num(Expr):
     '''A numeric literal.'''
     val: float
     def pprint(self) -> str:
-      if modf(self.val)[0] == 0.0:
+      if self.val.is_integer():
         return str(int(self.val))
       else:
         return str(self.val)
