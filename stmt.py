@@ -9,11 +9,11 @@ from parse_expr import (ascii_digits1, parse_expr,
 from parser import (ap, choice, end, fail, lit, lit_ci,
   many, manyNotOf, NoParse, optional, ParserState,
   sepBy, space, the_rest)
+from run_state import LineNum, RunState
 from typing import ClassVar, NewType, Self
 
 from expr import Expr, ScalarVar, Var, VarName
 
-LineNum = NewType('LineNum', int)
 StmtName = NewType('StmtName', str)
 
 @dataclass
@@ -69,6 +69,9 @@ class Stmt:
         # if this happens, figure out how to catch it
         raise RTError(self.line_num,
           f'expression: {repr(e)}')
+
+    def run(self, rs: RunState['Stmt']) -> None:
+      raise NotImplementedError
 
 @dataclass
 class Let(Stmt):
