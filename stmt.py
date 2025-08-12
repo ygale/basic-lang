@@ -179,6 +179,13 @@ class If(Stmt):
         f'does not exist']))
     rs.goto = addr
 
+def parse_step(s: ParserState[str]) -> Expr:
+  '''Parse the STEP clause of a FOR statement.'''
+  space(s)
+  lit_ci(s, 'STEP')
+  space(s)
+  return parse_expr(s)
+
 @dataclass
 class For(Stmt):
   name = StmtName('FOR')
@@ -207,9 +214,10 @@ class For(Stmt):
     space(s)
     from_: Expr = parse_expr(s)
     space(s)
-    to: Expr = parse_expr(s)
+    lit_ci(s, 'TO')
     space(s)
-    step: Expr | None = optional(s, parse_expr)
+    to: Expr = parse_expr(s)
+    step: Expr | None = optional(s, parse_step)
     return this(line_num, var, from_, to, step)
 
   def run(self, rs: RunState[Stmt]) -> None:
