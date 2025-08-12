@@ -325,7 +325,7 @@ def sepBy[Input, Output](
     sep. The separators are not included in the
     output.'''
     try:
-        res: list[Output] = [parser(s)]
+        res: list[Output] = [attempt(s, parser)]
     except NoParse:
         return []
     while True:
