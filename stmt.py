@@ -319,7 +319,10 @@ class PrintNum(PrintItem):
 
   def run(self, rs: RunState[Stmt], pr: 'Print'
       ) -> None:
-    print(pr.eval_expr(rs, self.val), end='')
+    val: float = pr.eval_expr(rs, self.val)
+    print(
+      str(int(val)) if val.is_integer() else str(val),
+      end='')
 
 @dataclass
 class PrintString(PrintItem):
