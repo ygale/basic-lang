@@ -17,10 +17,13 @@ def run(prog: list[Stmt]) -> None:
         # is too large
       elif type(rs.goto) == int:
         rs.addr = rs.goto
+        rs.goto = None
       else: # StopRun
         return
   except RTError as e:
     print(str(e))
+    return
+  except KeyboardInterrupt:
     return
   except Exception as e:
     # if this happens, figure out how to catch it
