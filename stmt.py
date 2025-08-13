@@ -383,56 +383,83 @@ def parse_printitem(s: ParserState[str]) -> PrintItem:
     ]
   )
 
-def parse_printitem_sep(
+def parse_sep_printitem(
     s: ParserState[str]
-    ) -> tuple[PrintItem, PrintSep]:
-  item: PrintItem = parse_printitem(s)
-  space(s)
+    ) -> tuple[PrintSep, PrintItem]:
   sep: PrintSep = parse_printsep(s)
-  return (item, sep)
+  space(s)
+  item: PrintItem = parse_printitem(s)
+  return (sep, item)
+
+@dataclass
+class PrintItems:
+  '''A non-empty list of print items.'''
+  first_item: PrintItem
+  items: list[tuple[PrintSep, PrintItem]]
+  no_newline: bool
+  def pprint_tokens(self) -> Iterator[str]:
+    if len(self.items) == 0:
+      if self.no_newline:
+        yield self.first_item.pprint_print_item(
+          PrintSep.SEMICOLON)
+      else:
+        yield self.first_item.pprint_print_item()
+    else:
+      yield self.first_item.pprint_print_item(
+        self.items[0][0])
+      i: int
+      for i in range(1, len(self.items)):
+        yield self.items[i-1][1].pprint_print_item(
+          self.items[i][0])
+      if self.no_newline:
+        yield self.items[-1][1].pprint_print_item(
+          PrintSep.SEMICOLON)
+      else:
+        yield self.items[-1][1].pprint_print_item()
+
+  @classmethod
+  def parse(this, s: ParserState[str]) -> Self:
+    first_item: PrintItem = parse_printitem(s)
+    items: list[tuple[PrintSep, PrintItem]] = sepBy(s,
+      space, parse_sep_printitem)
+    space(s)
+    no_newline: bool = False
+    if optional(s, ap(lit, PrintSep.SEMICOLON)
+      ) is not None:
+      no_newline = True
+    return this(first_item, items, no_newline)
+
+  def run(self, rs: RunState[Stmt], pr: 'Print') -> None:
+    sep: PrintSep
+    item: PrintItem
+    self.first_item.run(rs, pr)
+    for sep, item in self.items:
+      if sep == PrintSep.COMMA:
+        print(' ', end='')
+      item.run(rs, pr)
+    if not self.no_newline:
+      print()
 
 @dataclass
 class Print(Stmt):
   name: ClassVar[StmtName] = StmtName('PRINT')
-  items: list[tuple[PrintItem, PrintSep]]
-  last_item: PrintItem
-  no_newline: bool
+  items: PrintItems | None
   def pprint_tokens(self) -> Iterator[str]:
-    for item, sep in self.items:
-      yield item.pprint_print_item(sep)
-    if self.no_newline:
-      yield self.last_item.pprint_print_item(
-        PrintSep.SEMICOLON)
-    else:
-      yield self.last_item.pprint_print_item()
+    if self.items is not None:
+      yield from self.items.pprint_tokens()
 
   @classmethod
   def parse_body(this,
       s: ParserState[str],
       line_num: LineNum
       ) -> Self:
-    items: list[tuple[PrintItem, PrintSep]] = sepBy(s,
-      space, parse_printitem_sep)
-    space(s)
-    last_item: PrintItem = parse_printitem(s)
-    space(s)
-    no_newline: bool = False
-    if optional(s, ap(lit, PrintSep.SEMICOLON)
-      ) is not None:
-      no_newline = True
-    return this(line_num,
-      items, last_item, no_newline)
+    return this(line_num, optional(s, PrintItems.parse))
 
   def run(self, rs: RunState[Stmt]) -> None:
-    item: PrintItem
-    sep: PrintSep
-    for item, sep in self.items:
-      item.run(rs, self)
-      if sep == PrintSep.COMMA:
-        print(' ', end='')
-    self.last_item.run(rs, self)
-    if not self.no_newline:
+    if self.items is None:
       print()
+    else:
+      self.items.run(rs, self)
 
 def parse_input(s: ParserState[str]) -> float:
   '''Try hard to find a number in the input, or return
