@@ -7,6 +7,7 @@ from io import TextIOWrapper
 from parser import (ap, choice, end, fail, lit, lit_ci,
   NoParse, optional, parse, parse_tuple, ParserState, space,
   the_rest)
+import readline
 from run import run
 from run_state import LineNum
 from stmt import parse_linenum, parse_stmt, Stmt
