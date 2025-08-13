@@ -523,15 +523,22 @@ class Data(Stmt):
   name: ClassVar[StmtName] = StmtName('DATA')
   data: list[float]
   def pprint_tokens(self) -> Iterator[str]:
-    for item in self.data:
-      yield str(item) + ','
+    for item in self.data[:-1]:
+      yield pprint_float(item) + ','
+    if len(self.data) > 0:
+      yield pprint_float(self.data[-1])
 
   @classmethod
   def parse_body(this,
       s: ParserState[str],
       line_num: LineNum
       ) -> Self:
-    return this(line_num, sepBy(s, comma, parse_num))
+    data: list[float] = sepBy(s, comma, parse_num)
+    if len(data) == 0:
+      fail(s,
+        expected = 'one or more numbers',
+        found = 'none')
+    return this(line_num, data)
 
   def run(self, rs: RunState[Stmt]) -> None:
     # data is set at startup
