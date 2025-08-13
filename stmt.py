@@ -100,7 +100,7 @@ def assign(
 
 @dataclass
 class Let(Stmt):
-  name = StmtName('LET')
+  name: ClassVar[StmtName] = StmtName('LET')
   var: Var
   val: Expr
   def pprint_tokens(self) -> Iterator[str]:
@@ -125,7 +125,7 @@ class Let(Stmt):
 
 @dataclass
 class Goto(Stmt):
-  name = StmtName('GOTO')
+  name: ClassVar[StmtName] = StmtName('GOTO')
   dest: LineNum
   def pprint_tokens(self) -> Iterator[str]:
     yield str(self.dest)
@@ -148,7 +148,7 @@ class Goto(Stmt):
 
 @dataclass
 class If(Stmt):
-  name = StmtName('IF')
+  name: ClassVar[StmtName] = StmtName('IF')
   cond: Expr
   dest: LineNum
   def pprint_tokens(self) -> Iterator[str]:
@@ -188,7 +188,7 @@ def parse_step(s: ParserState[str]) -> Expr:
 
 @dataclass
 class For(Stmt):
-  name = StmtName('FOR')
+  name: ClassVar[StmtName] = StmtName('FOR')
   var: ScalarVar
   from_: Expr
   to: Expr
@@ -232,7 +232,7 @@ class For(Stmt):
 
 @dataclass
 class Next(Stmt):
-  name = StmtName('NEXT')
+  name: ClassVar[StmtName] = StmtName('NEXT')
   var: ScalarVar
   def pprint_tokens(self) -> Iterator[str]:
     yield self.var.pprint()
@@ -392,7 +392,7 @@ def parse_printitem_sep(
 
 @dataclass
 class Print(Stmt):
-  name = StmtName('PRINT')
+  name: ClassVar[StmtName] = StmtName('PRINT')
   items: list[tuple[PrintItem, PrintSep]]
   last_item: PrintItem
   no_newline: bool
@@ -447,7 +447,7 @@ def parse_input(s: ParserState[str]) -> float:
 
 @dataclass
 class Input(Stmt):
-  name = StmtName('INPUT')
+  name: ClassVar[StmtName] = StmtName('INPUT')
   var: Var
   def pprint_tokens(self) -> Iterator[str]:
     yield self.var.pprint()
@@ -470,7 +470,7 @@ class Input(Stmt):
 
 @dataclass
 class Read(Stmt):
-  name = StmtName('READ')
+  name: ClassVar[StmtName] = StmtName('READ')
   var: Var
   def pprint_tokens(self) -> Iterator[str]:
     yield self.var.pprint()
@@ -494,7 +494,7 @@ class Read(Stmt):
 
 @dataclass
 class Data(Stmt):
-  name = StmtName('DATA')
+  name: ClassVar[StmtName] = StmtName('DATA')
   data: list[float]
   def pprint_tokens(self) -> Iterator[str]:
     for item in self.data:
@@ -521,7 +521,7 @@ def comma(s: ParserState[str]) -> str:
 
 @dataclass
 class Restore(Stmt):
-  name = StmtName('RESTORE')
+  name: ClassVar[StmtName] = StmtName('RESTORE')
   def pprint_tokens(self) -> Iterator[str]:
     return iter([])
 
@@ -537,7 +537,7 @@ class Restore(Stmt):
 
 @dataclass
 class Dim(Stmt):
-  name = StmtName('DIM')
+  name: ClassVar[StmtName] = StmtName('DIM')
   varname: VarName
   size: int
   def pprint_tokens(self) -> Iterator[str]:
@@ -565,7 +565,7 @@ class Dim(Stmt):
 
 @dataclass
 class Rem(Stmt):
-  name = StmtName('REM')
+  name: ClassVar[StmtName] = StmtName('REM')
   comment: str
   def pprint_tokens(self) -> Iterator[str]:
     yield self.comment
@@ -582,7 +582,7 @@ class Rem(Stmt):
 
 @dataclass
 class Stop(Stmt):
-  name = StmtName('STOP')
+  name: ClassVar[StmtName] = StmtName('STOP')
   def pprint_tokens(self) -> Iterator[str]:
     return iter([])
 
@@ -599,7 +599,7 @@ class Stop(Stmt):
 
 @dataclass
 class End(Stmt):
-  name = StmtName('END')
+  name: ClassVar[StmtName] = StmtName('END')
   def pprint_tokens(self) -> Iterator[str]:
     return iter([])
 

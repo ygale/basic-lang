@@ -2,11 +2,14 @@ from exceptions import RTError
 from run_state import LineNum, RunState
 from stmt import Data, End, Stmt
 
-def run(prog: list[Stmt]) -> None:
+def run(
+    prog: list[Stmt],
+    first_line: LineNum | None = None
+    ) -> None:
   if len(prog) == 0:
     # the empty program does nothing
     return
-  rs: RunState[Stmt] = initRunState(prog)
+  rs: RunState[Stmt] = initRunState(prog, first_line)
   try:
     while True:
       rs.prog[rs.addr].run(rs)
@@ -22,14 +25,16 @@ def run(prog: list[Stmt]) -> None:
         return
   except RTError as e:
     print(str(e))
-    return
   except KeyboardInterrupt:
     return
   except Exception as e:
     # if this happens, figure out how to catch it
     print(f'Exception: {repr(e)}')
 
-def initRunState(prog: list[Stmt]) -> RunState[Stmt]:
+def initRunState(
+    prog: list[Stmt],
+    first_line: LineNum | None = None
+    ) -> RunState[Stmt]:
   if not isinstance(prog[-1], End):
     prog.append(End(LineNum(prog[-1].line_num + 1)))
   line_map: dict[LineNum, int] = {}
@@ -40,7 +45,17 @@ def initRunState(prog: list[Stmt]) -> RunState[Stmt]:
     line_map[stmt.line_num] = n
     if isinstance(stmt, Data):
       data.extend(stmt.data)
+  addr: int
+  if first_line is None:
+    addr = 0
+  else:
+    try:
+      addr = line_map[first_line]
+    except KeyError:
+      raise RTError(first_line,
+        'Starting line does not exist')
   return RunState(
     prog = prog,
     line_map = line_map,
+    addr = addr,
     data = data)

@@ -57,13 +57,29 @@ def parse[Token, Output](
         *,
         what: str | None = None
         ) -> Output:
-    '''Run the parser on the given input.'''
+    '''Run the parser on the entire given input. Raise NoParse
+    if it fails.'''
     outp: Output
     state: ParserState[Sequence[Token]]
     outp, state = parse_with_state(
       _input, parser, what=what)
     end(state)
     return outp
+
+def parse_optional[Token, Output](
+        _input: Sequence[Token],
+        parser: Callable[
+          [ParserState[Sequence[Token]]],
+          Output],
+        *,
+        what: str | None = None
+        ) -> Output | None:
+    '''Run the parser on the entire given input. Return None
+    if it fails'''
+    try:
+      return parse(_input, parser)
+    except NoParse:
+      return None
 
 def parse_initial[Token, Output](
         _input: Sequence[Token],
@@ -96,7 +112,7 @@ def ap[Input, Output, **P](
     return inner_parser
 
 @contextmanager
-def what(s: ParserState, what: str | None
+def what(s: ParserState[object], what: str | None
         ) -> Generator[None]:
     s.what_stack.append(s.what)
     s.what = what
@@ -118,7 +134,7 @@ def succeed[Output](_s: object, result: Output) -> Output:
     return result
 
 def fail(
-        s: ParserState,
+        s: ParserState[object],
         expected: object,
         found: object,
         what: str | None = None
@@ -213,7 +229,9 @@ def the_rest(s: ParserState[str]) -> str:
     s.cursor = len(s._input)
     return rest
 
-def end[Input: Sequence](s: ParserState[Input]) -> None:
+def end[Input: Sequence[object]](
+      s: ParserState[Input]
+      ) -> None:
     '''A parser that succeeds if there is no more
     input.'''
     if s.cursor < len(s._input):
