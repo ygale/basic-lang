@@ -75,12 +75,17 @@ class Num(Expr):
     '''A numeric literal.'''
     val: float
     def pprint(self) -> str:
-      if self.val.is_integer():
-        return str(int(self.val))
-      else:
-        return str(self.val)
+      return pprint_float(self.val)
     def evaluate(self, _: LookupVar) -> float:
         return self.val
+
+def pprint_float(x: float) -> str:
+  '''Omit the zero decimal part when pretty printing
+  integers.'''
+  if x.is_integer():
+    return str(int(x))
+  else:
+    return str(x)
 
 @dataclass
 class Parens(Expr):

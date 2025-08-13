@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from exceptions import EvalError
-from expr import ArrayElt, LookupVar, VarName
+from expr import ArrayElt, LookupVar, pprint_float, VarName
 from typing import Callable, Concatenate, NewType
 
 LineNum = NewType('LineNum', int)
@@ -81,9 +81,7 @@ class RunState[Stmt](LookupVar):
     except KeyError:
       raise EvalError(f'array {var.name} has no DIM')
     except IndexError:
-      subscr: str = (
-        str(int(var.subscr)) if var.subscr.is_integer()
-        else str(var.subscr))
+      subscr: str = pprint_float(var.subscr)
       raise EvalError(' '.join([
         f'subscript {subscr} is out of range',
         f'for array {var.name}']))

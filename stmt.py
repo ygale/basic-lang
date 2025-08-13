@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum, unique
 from exceptions import EvalError, RTError
 from expr import (ArrayElt, ArrayVar, Expr, LookupVar,
-  ScalarVar, Var, VarName)
+  pprint_float, ScalarVar, Var, VarName)
 from parse_expr import (ascii_digits1, parse_expr,
   parse_num, var_expr, var_name)
 from parser import (ap, attempt, choice, end, fail, lit,
@@ -321,9 +321,7 @@ class PrintNum(PrintItem):
   def run(self, rs: RunState[Stmt], pr: 'Print'
       ) -> None:
     val: float = pr.eval_expr(rs, self.val)
-    print(
-      str(int(val)) if val.is_integer() else str(val),
-      end='')
+    print(pprint_float(val), end='')
 
 @dataclass
 class PrintString(PrintItem):
