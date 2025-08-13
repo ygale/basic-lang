@@ -266,7 +266,7 @@ def list_stmts(
     if (lines.from_ is not None
         and stmt.line_num < lines.from_):
       continue
-    if (lines.to is not None and stmt.line_num < lines.to):
+    if (lines.to is not None and stmt.line_num > lines.to):
       break
     yield stmt
 
