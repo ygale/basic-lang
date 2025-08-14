@@ -289,6 +289,8 @@ def repl(debug: bool = False) -> None:
       # user hit ctrl-d
       return
     inp = inp.strip()
+    if len(inp) == 0:
+      continue
 
     line_num: LineNum | None = optional(
       ParserState(inp), only_linenum)
