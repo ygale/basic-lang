@@ -137,4 +137,4 @@ class Ge(BinOp):
             else FALSE)
 
 all_binops: list[type[BinOp]] = [
-  Plus, Minus, Times, Div, Eq, Ne, Lt, Le, Gt, Ge]
+  Plus, Minus, Times, Div, Eq, Ne, Le, Ge, Lt, Gt]
