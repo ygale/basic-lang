@@ -17,18 +17,17 @@ def non_op(s: PS) -> Expr:
   '''Parse an expression whose top level is not a binary
   operator.'''
   space(s)
-  expr: Expr | None = optional(s, ap(choice, [
-    paren_expr,
-    num_expr,
-    func_expr,
-    var_expr,
-    unary_expr]))
-  if expr is None:
+  try:
+    return choice(s, [
+      paren_expr,
+      num_expr,
+      func_expr,
+      var_expr,
+      unary_expr])
+  except NoParse:
     fail(s,
          expected='expression',
          found=s._input[s.cursor:])
-  else:
-    return expr
 
 def ops(s: PS, expr: Expr) -> Expr:
   '''Parse a sequence of binary operators.'''
@@ -204,7 +203,6 @@ def unary_expr(s: PS) -> UnaryOp:
   unaryop_cls: type[UnaryOp] = choice(s,
     [ap(one_unaryop, unaryop)
       for unaryop in all_unaryops])
-  lit(s, '-')
   return unaryop_cls(non_op(s))
 
 def one_unaryop(
