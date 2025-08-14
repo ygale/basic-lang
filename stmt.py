@@ -5,10 +5,10 @@ from enum import StrEnum, unique
 from exceptions import EvalError, RTError
 from expr import (ArrayElt, ArrayVar, Expr, LookupVar,
   pprint_float, ScalarVar, Var, VarName)
-from parse_expr import (ascii_digits1, parse_expr,
-  parse_num, var_expr, var_name)
+from parse_expr import (ascii_digit_range, ascii_digits1,
+  parse_expr, parse_num, var_expr, var_name)
 from parser import (ap, attempt, choice, end, fail, lit,
-  lit_ci, many, manyNotOf, NoParse, one, optional, 
+  lit_ci, many, manyNotOf, manyOf, NoParse, one, optional, 
   ParserState, sepBy, space, the_rest)
 import readline
 from run_state import (ForLoop, LineNum, RunState,
@@ -458,13 +458,22 @@ class Print(Stmt):
     else:
       self.items.run(rs, self)
 
+sgn_chars: set[str] = set('+-')
+num_chars: set[str] = ascii_digit_range | sgn_chars | set('.')
 def parse_input(s: ParserState[str]) -> float:
   '''Try hard to find a number in the input, or return
   zero.'''
+  neg: bool
+  num: float
   while True:
-    num = optional(s, ap(attempt, parse_num))
-    if num is not None:
-      return num
+    manyNotOf(s, num_chars)
+    neg = manyOf(s, sgn_chars)[-1:] == '-'
+    space(s)
+    try:
+      num = attempt(s, parse_num)
+      return -num if neg else num
+    except NoParse:
+      pass
     try:
       one(s)
     except NoParse:

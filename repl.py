@@ -324,8 +324,6 @@ def repl(debug: bool = False) -> None:
       if debug:
         print(parse_cmd(ParserState(inp)))
       parse_cmd(ParserState(inp)).run(rs)
-    except NoParse as e:
-      print(str(ReplSyntaxError(msg=str(e))))
     except BaseReplError as e:
       print(str(e))
     except Exception as e:
