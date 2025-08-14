@@ -173,12 +173,11 @@ class If(Stmt):
     if self.eval_expr(rs, self.cond) == 0.0:
       return
     try:
-      addr: int = rs.line_map[self.dest]
+      rs.goto = rs.line_map[self.dest]
     except KeyError:
       raise RTError(self.line_num, ' '.join([
         f'THEN destination line {self.dest}',
         f'does not exist']))
-    rs.goto = addr
 
 def parse_step(s: ParserState[str]) -> Expr:
   '''Parse the STEP clause of a FOR statement.'''
@@ -646,7 +645,7 @@ class End(Stmt):
   def run(self, rs: RunState[Stmt]) -> None:
     rs.goto = StopRun()
 
-all_stmts: list[type[Stmt]] = [Let, Goto, For, Next,
+all_stmts: list[type[Stmt]] = [Let, Goto, If, For, Next,
   Print, Input, Read, Data, Restore, Dim, Rem, Stop,
   End]
 
