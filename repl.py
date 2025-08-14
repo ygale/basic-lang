@@ -205,6 +205,8 @@ class Save(Cmd):
           print(stmt.pprint(), file=f)
     except Exception as e:
       raise ReplError(f'Exception: {e}')
+    if self.lines.from_ is None and self.lines.to is None:
+      rs.dirty = False
 
 all_cmds: list[type[Cmd]] = [Add, Exit, List, Load, New, Quit,
   Run, Save]
