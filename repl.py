@@ -300,6 +300,7 @@ def repl(debug: bool = False) -> None:
         if debug:
           print(f'deleting {rs.prog[line_num]}')
         del rs.prog[line_num]
+        rs.dirty = True
       except KeyError:
         pass
       continue
@@ -307,13 +308,15 @@ def repl(debug: bool = False) -> None:
     line_num = optional(ParserState(inp), parse_linenum)
     if line_num is not None:
       # starts with a line number, it is a statement
+      if debug:
+        print(line_num)
       try:
         rs.prog[line_num] = parse_stmt(ParserState(inp))
-        if debug:
-          print(line_num)
-          print(rs.prog[line_num])
+        rs.dirty = True
       except NoParse as e:
         print(str(ReplSyntaxError(str(e), line_num)))
+      if debug:
+        print(rs.prog[line_num])
       continue
 
     # otherwise, it is a repl command
