@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from exceptions import EvalError
 import math
+import random
 from typing import ClassVar, NewType
 
 from expr import Expr, LookupVar
@@ -85,5 +86,10 @@ class Atn(Func):
   def evaluate(self, lv: LookupVar) -> float:
     return math.atan(self.arg.evaluate(lv))
 
+class Rnd(Func):
+  name = FuncName('RND')
+  def evaluate(self, lv: LookupVar) -> float:
+    return random.random()
+
 all_funcs: list[type[Func]] = [
-  Int, Abs, Sgn, Sqr, Log, Exp, Sin, Cos, Tan, Atn]
+  Int, Abs, Sgn, Sqr, Log, Exp, Sin, Cos, Tan, Atn, Rnd]
