@@ -279,7 +279,7 @@ def only_linenum(s: ParserState[str]) -> LineNum:
   end(s)
   return line_num
 
-def repl(debug: bool = False) -> None:
+def repl() -> None:
   '''Run the repl.'''
   rs: ReplState = ReplState()
   while True:
@@ -298,11 +298,7 @@ def repl(debug: bool = False) -> None:
       ParserState(inp), only_linenum)
     if line_num is not None:
       # just a line number, the user wants to delete it
-      if debug:
-        print(line_num)
       try:
-        if debug:
-          print(f'deleting {rs.prog[line_num]}')
         del rs.prog[line_num]
         rs.dirty = True
       except KeyError:
@@ -312,21 +308,15 @@ def repl(debug: bool = False) -> None:
     line_num = optional(ParserState(inp), parse_linenum)
     if line_num is not None:
       # starts with a line number, it is a statement
-      if debug:
-        print(line_num)
       try:
         rs.prog[line_num] = parse_stmt(ParserState(inp))
         rs.dirty = True
       except NoParse as e:
         print(str(ReplSyntaxError(str(e), line_num)))
-      if debug:
-        print(rs.prog[line_num])
       continue
 
     # otherwise, it is a repl command
     try:
-      if debug:
-        print(parse_cmd(ParserState(inp)))
       parse_cmd(ParserState(inp)).run(rs)
     except BaseReplError as e:
       print(str(e))
