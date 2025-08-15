@@ -79,6 +79,23 @@ class Div(BinOp):
     except ZeroDivisionError:
       raise EvalError('division by zero')
 
+class Power(BinOp):
+  symbol = Symbol('^')
+  precedence = 4
+  def evaluate(self, lv: LookupVar) -> float:
+    try:
+      val: float | complex = (
+        self.arg1.evaluate(lv) **
+        self.arg2.evaluate(lv))
+    except ZeroDivisionError:
+      raise EvalError('negative power of zero')
+    except OverflowError:
+      raise EvalError('number is too large')
+    if isinstance(val, float):
+      return val
+    else:
+      raise EvalError('fractional power of a negative')
+
 TRUE:  float = 1.0
 FALSE: float = 0.0
 
@@ -136,5 +153,5 @@ class Ge(BinOp):
             self.arg2.evaluate(lv)
             else FALSE)
 
-all_binops: list[type[BinOp]] = [
-  Plus, Minus, Times, Div, Eq, Ne, Le, Ge, Lt, Gt]
+all_binops: list[type[BinOp]] = [ # order matters
+  Plus, Minus, Times, Div, Power, Eq, Ne, Le, Ge, Lt, Gt]
