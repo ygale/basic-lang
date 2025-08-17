@@ -1,0 +1,21 @@
+10 PRINT "Prime factors"
+20 PRINT
+30 PRINT "Enter the number to factor, or 0 to quit"
+40 PRINT "n";
+50 INPUT N
+60 IF N < 2 THEN 99999
+65 PRINT N; "=";
+70 LET P = 2
+80 GOTO 500
+100 IF P > 2 THEN 130
+110 LET P = 3
+120 GOTO 500
+130 LET P = P + 2
+500 IF P * P <= N THEN 530
+510 PRINT N
+520 GOTO 20
+530 IF INT(N / P) * P <> N THEN 100
+540 PRINT P; "*";
+550 LET N = N / P
+560 GOTO 500
+99999 END

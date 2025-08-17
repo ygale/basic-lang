@@ -1,0 +1,31 @@
+10 PRINT "Quadratic roots"
+20 PRINT "Enter the coefficients, a=0 to quit"
+30 PRINT "a";
+40 INPUT A
+50 IF A = 0 THEN 9999
+60 PRINT "b";
+70 INPUT B
+80 PRINT "c";
+90 INPUT C
+100 IF A = 1 THEN 120
+110 PRINT A;
+120 PRINT "x^2";
+130 IF B = 0 THEN 180
+140 PRINT "+";
+150 IF B = 1 THEN 170
+160 PRINT B;
+170 PRINT "x";
+180 IF C = 0 THEN 200
+190 PRINT "+"; C
+200 PRINT
+210 LET D = B * B - 4 * A * C
+220 IF D > 0 THEN 260
+230 IF D = 0 THEN 280
+240 PRINT "No roots"
+250 GOTO 290
+260 PRINT "Roots:", (-B - SQR(D)) / (2 * A), (-B + SQR(D)) / (2 * A)
+270 GOTO 290
+280 PRINT "Root:", -B / (2 * A)
+290 PRINT
+300 GOTO 20
+9999 END
