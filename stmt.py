@@ -223,12 +223,28 @@ class For(Stmt):
   def run(self, rs: RunState[Stmt]) -> None:
     rs.scalars[self.var.name] = self.eval_expr(
       rs, self.from_)
+    parent: VarName | None
+    if self.var.name in rs.for_loops:
+      # A FOR loop for this variable is already active.
+      # Cancel all nested loops before restarting it.
+      inner: VarName | None = rs.inner_for
+      while inner is not None:
+        if inner == self.var.name:
+          break
+        rs.inner_for = rs.for_loops[inner].parent
+        del rs.for_loops[inner]
+        inner = rs.inner_for
+      parent = rs.for_loops[self.var.name].parent
+    else:
+      parent = rs.inner_for
+      rs.inner_for = self.var.name
     rs.for_loops[self.var.name] = ForLoop(
       var = self.var.name,
       first_line = rs.addr + 1,
       to = self.eval_expr(rs, self.to),
       step = (1.0 if self.step is None else
-        self.eval_expr(rs, self.step)))
+        self.eval_expr(rs, self.step)),
+      parent = parent)
 
 @dataclass
 class Next(Stmt):
@@ -245,24 +261,41 @@ class Next(Stmt):
     return this(line_num, scalar_var(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
-    try:
-      loop: ForLoop = rs.for_loops[self.var.name]
-    except KeyError:
+    # cancel any nested loops and get the ForLoop
+    loop: ForLoop
+    while rs.inner_for is not None:
+      try:
+        loop = rs.for_loops[rs.inner_for]
+      except KeyError:
+        # if this happens, figure out how to catch it
+        raise KeyError(' '.join([
+          f'FOR variable {self.var.name} not found',
+          'on line {self.line_num}']))
+      if loop.var == self.var.name:
+        break
+      rs.inner_for = loop.parent
+      del rs.for_loops[loop.var]
+    else:
       raise RTError(self.line_num,
         f'NEXT {self.var.name} has no FOR')
+    # bump the FOR variable to its next value
     try:
-      rs.scalars[self.var.name] += loop.step
+      rs.scalars[loop.var] += loop.step
     except KeyError:
       # if this happens, figure out how to catch it
       raise KeyError(' '.join([
-        f'FOR variable {self.var.name} not found',
+        f'FOR variable {loop.var} not found',
         'on line {self.line_num}']))
-    if loop.step >= 0.0:
-      if rs.scalars[self.var.name] <= loop.to:
-        rs.goto = loop.first_line
+    # check if the loop is done
+    done: bool = (
+      rs.scalars[loop.var] > loop.to
+      if loop.step >= 0.0 else
+      rs.scalars[loop.var] < loop.to)
+    if done:
+      rs.inner_for = loop.parent
+      del rs.for_loops[loop.var]
     else:
-      if rs.scalars[self.var.name] >= loop.to:
-        rs.goto = loop.first_line
+      rs.goto = loop.first_line
 
 @unique
 class PrintSep(StrEnum):

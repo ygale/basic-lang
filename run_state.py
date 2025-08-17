@@ -14,6 +14,7 @@ class ForLoop:
   first_line: int
   to: float
   step: float = 1.0
+  parent: VarName | None = None
 
 @dataclass
 class RunState[Stmt](LookupVar):
@@ -28,6 +29,7 @@ class RunState[Stmt](LookupVar):
     default_factory=dict)
   for_loops: dict[VarName, ForLoop] = field(
     default_factory=dict)
+  inner_for: VarName | None = None
   data: list[float] = field(default_factory=list)
   data_cursor: int = 0
 
