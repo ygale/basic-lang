@@ -221,6 +221,7 @@ def parse_cmd(s: ParserState[str]) -> Cmd:
       expected='command',
       found=s._input[s.cursor:])
   space(s)
+  end(s)
   return cmd
 
 def are_you_sure(rs: ReplState) -> bool:
@@ -318,6 +319,8 @@ def repl() -> None:
     # otherwise, it is a repl command
     try:
       parse_cmd(ParserState(inp)).run(rs)
+    except NoParse as e:
+      print(str(ReplSyntaxError(str(e))))
     except BaseReplError as e:
       print(str(e))
     except Exception as e:
