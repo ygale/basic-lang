@@ -1,10 +1,9 @@
+from basic.exceptions import EvalError
+from basic.expr import Expr, LookupVar
 from dataclasses import dataclass
-from exceptions import EvalError
 import math
 import random
 from typing import ClassVar, NewType
-
-from expr import Expr, LookupVar
 
 FuncName = NewType('FuncName', str)
 

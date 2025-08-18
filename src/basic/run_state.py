@@ -1,6 +1,7 @@
+from basic.exceptions import EvalError
+from basic.expr import (ArrayElt, LookupVar, pprint_float,
+  VarName)
 from dataclasses import dataclass, field
-from exceptions import EvalError
-from expr import ArrayElt, LookupVar, pprint_float, VarName
 from typing import Callable, Concatenate, NewType
 
 LineNum = NewType('LineNum', int)

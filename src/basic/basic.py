@@ -1,4 +1,4 @@
-from repl import repl
+from basic.repl import repl
 
 if __name__ == '__main__':
   print('BASIC')

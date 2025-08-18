@@ -1,6 +1,6 @@
-from exceptions import RTError
-from run_state import LineNum, RunState
-from stmt import Data, End, Stmt
+from basic.exceptions import RTError
+from basic.run_state import LineNum, RunState
+from basic.stmt import Data, End, Stmt
 
 def run(
     prog: list[Stmt],

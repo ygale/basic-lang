@@ -1,4 +1,4 @@
-from expr import *
+from basic.expr import *
 
 class LV(LookupVar):
     scalars: dict[str, float] = {

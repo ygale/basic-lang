@@ -1,7 +1,7 @@
-from expr import (ArrayVar, Expr, Num, Parens, ScalarVar,
-  Var, VarName)
-from func import all_funcs, Func
-from op import all_binops, all_unaryops, BinOp, UnaryOp
+from basic.expr import (ArrayVar, Expr, Num, Parens,
+  ScalarVar, Var, VarName)
+from basic.func import all_funcs, Func
+from basic.op import all_binops, all_unaryops, BinOp, UnaryOp
 from parserlib.parser import (ap, attempt, choice, fail, lit,
   lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
   ParserState, space, what)

@@ -1,8 +1,7 @@
+from basic.exceptions import EvalError
+from basic.expr import Expr, LookupVar
 from dataclasses import dataclass
-from exceptions import EvalError
 from typing import ClassVar, NewType
-
-from expr import Expr, LookupVar
 
 Symbol = NewType('Symbol', str)
 

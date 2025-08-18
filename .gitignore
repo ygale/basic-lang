@@ -13,3 +13,8 @@ build/
 # pytest
 .cache/
 .pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml

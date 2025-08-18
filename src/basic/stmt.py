@@ -1,18 +1,18 @@
 from abc import abstractmethod
+from basic.exceptions import EvalError, RTError
+from basic.expr import (ArrayElt, ArrayVar, Expr, LookupVar,
+  pprint_float, ScalarVar, Var, VarName)
+from basic.parse_expr import (ascii_digit_range,
+  ascii_digits1, parse_expr, parse_num, var_expr, var_name)
+from basic.run_state import (ForLoop, LineNum, RunState,
+  StopRun)
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
-from exceptions import EvalError, RTError
-from expr import (ArrayElt, ArrayVar, Expr, LookupVar,
-  pprint_float, ScalarVar, Var, VarName)
-from parse_expr import (ascii_digit_range, ascii_digits1,
-  parse_expr, parse_num, var_expr, var_name)
 from parserlib.parser import (ap, attempt, choice, end, fail,
   lit, lit_ci, many, manyNotOf, manyOf, NoParse, one,
   optional, ParserState, sepBy, space, the_rest)
 import readline
-from run_state import (ForLoop, LineNum, RunState,
-  StopRun)
 from typing import ClassVar, NewType, Self
 
 StmtName = NewType('StmtName', str)
