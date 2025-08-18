@@ -2,6 +2,7 @@ from basic.expr import (ArrayVar, Expr, Num, Parens,
   ScalarVar, Var, VarName)
 from basic.func import all_funcs, Func
 from basic.op import all_binops, all_unaryops, BinOp, UnaryOp
+from math import isinf
 from parserlib.parser import (ap, attempt, choice, fail, lit,
   lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
   ParserState, space, what)
@@ -139,9 +140,13 @@ def parse_num(s: PS) -> float:
   num_str: str = ''.join([
     int_part, point, frac_part, exp_part])
   try:
-    return float(num_str)
+    val: float = float(num_str)
   except ValueError:
     fail(s, expected='number', found=num_str)
+  if isinf(val):
+    fail(s, expected='number',
+      found='a number that is too large')
+  return val
 
 def exponent(s: PS) -> str:
   '''Parse the exponent part of a numetic litetal.'''

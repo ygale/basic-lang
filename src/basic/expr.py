@@ -79,10 +79,11 @@ class Num(Expr):
     def evaluate(self, _: LookupVar) -> float:
         return self.val
 
+two53: float = 2.0 ** 53
 def pprint_float(x: float) -> str:
   '''Omit the zero decimal part when pretty printing
   integers.'''
-  if x.is_integer():
+  if x.is_integer() and x < two53:
     return str(int(x))
   else:
     return str(x)

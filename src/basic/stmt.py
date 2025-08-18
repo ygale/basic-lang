@@ -9,6 +9,7 @@ from basic.run_state import (ForLoop, LineNum, RunState,
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
+from math import isinf
 from parserlib.parser import (ap, attempt, choice, end, fail,
   lit, lit_ci, many, manyNotOf, manyOf, NoParse, one,
   optional, ParserState, sepBy, space, the_rest)
@@ -62,13 +63,17 @@ class Stmt:
       expr: Expr
       ) -> float:
     try:
-      return expr.evaluate(lv)
+      val: float = expr.evaluate(lv)
     except EvalError as e:
       raise RTError(self.line_num, str(e))
     except Exception as e:
       # if this happens, figure out how to catch it
       raise RTError(self.line_num,
         f'expression: {repr(e)}')
+    if isinf(val):
+      raise RTError(self.line_num,
+        'expression value is too large')
+    return val
 
   @abstractmethod
   def run(self, rs: RunState['Stmt']) -> None:
