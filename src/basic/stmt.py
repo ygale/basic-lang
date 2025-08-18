@@ -7,9 +7,9 @@ from expr import (ArrayElt, ArrayVar, Expr, LookupVar,
   pprint_float, ScalarVar, Var, VarName)
 from parse_expr import (ascii_digit_range, ascii_digits1,
   parse_expr, parse_num, var_expr, var_name)
-from parser import (ap, attempt, choice, end, fail, lit,
-  lit_ci, many, manyNotOf, manyOf, NoParse, one, optional, 
-  ParserState, sepBy, space, the_rest)
+from parserlib.parser import (ap, attempt, choice, end, fail,
+  lit, lit_ci, many, manyNotOf, manyOf, NoParse, one,
+  optional, ParserState, sepBy, space, the_rest)
 import readline
 from run_state import (ForLoop, LineNum, RunState,
   StopRun)
