@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from enum import StrEnum, unique
 from math import isinf
 from parserlib.parser import (ap, attempt, choice, end, fail,
-  lit, lit_ci, many, manyNotOf, manyOf, NoParse, one,
-  optional, ParserState, sepBy, space, the_rest)
+  lit, lit_ci, many, many1, manyNotOf, NoParse, one, optional,
+  ParserState, sepBy, space, the_rest)
 import readline
 from typing import ClassVar, NewType, Self
 
@@ -496,8 +496,12 @@ class Print(Stmt):
     else:
       self.items.run(rs, self)
 
-sgn_chars: set[str] = set('+-')
-num_chars: set[str] = ascii_digit_range | sgn_chars | set('.')
+def neg_space(s: ParserState[str]) -> None:
+  '''Minus signs and spaces'''
+  many1(s, ap(lit, '-'))
+  space(s)
+
+num_chars: set[str] = ascii_digit_range | set('-.')
 def parse_input(s: ParserState[str]) -> float:
   '''Try hard to find a number in the input, or return
   zero.'''
@@ -505,8 +509,11 @@ def parse_input(s: ParserState[str]) -> float:
   num: float
   while True:
     manyNotOf(s, num_chars)
-    neg = manyOf(s, sgn_chars)[-1:] == '-'
-    space(s)
+    try:
+      many1(s, neg_space)
+      neg = True
+    except NoParse:
+      neg = False
     try:
       num = attempt(s, parse_num)
       return -num if neg else num
