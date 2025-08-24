@@ -39,6 +39,7 @@
 520 REM |             |
 525 LET B[ABS(M)] = 1
 530 LET C = C * 10 + ABS(M)
+535 PRINT "My move:", ABS(M)
 540 REM Print the board
 545 PRINT
 550 FOR I = 1 TO 9
