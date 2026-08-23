@@ -1,20 +1,26 @@
 [project]
 name = "basic"
-version = "0.1.0"
+version = "0.2.0"
 description = "BASIC language interpreter"
 authors = [
     {name = "Yitzchak Gale",email = "gale@sefer.org"}
 ]
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "tdp-parser>=0.2.0,<0.3.0",
+]
+
+[project.urls]
+Repository = "https://github.com/ygale/basic"
+
+[project.scripts]
+basic = "basic.basic:main"
 
 [tool.poetry]
 packages = [{include = "basic", from = "src"}]
-
-[tool.poetry.dependencies]
-python = ">=3.12"
-parserlib = { path = "../parserlib", develop = true }
+include = ["src/basic/py.typed"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.4.1,<9.0.0"
@@ -35,6 +41,12 @@ omit = [
 ]
 show_missing = true
 skip_covered = true
+
+[tool.mypy]
+python_version = "3.12"
+namespace_packages = true
+files = ["src"] # default target
+mypy_path = ["src"] # tell mypy where to find code
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

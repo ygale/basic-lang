@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
 from math import isinf
-from parserlib.parser import (ap, attempt, choice, end, fail,
+from tdp_parser.parser import (ap, attempt, choice, end, fail,
   lit, lit_ci, many, many1, manyNotOf, NoParse, one, optional,
   ParserState, sepBy, space, the_rest)
 import readline

@@ -3,7 +3,7 @@ from basic.expr import (ArrayVar, Expr, Num, Parens,
 from basic.func import all_funcs, Func
 from basic.op import all_binops, all_unaryops, BinOp, UnaryOp
 from math import isinf
-from parserlib.parser import (ap, attempt, choice, fail, lit,
+from tdp_parser.parser import (ap, attempt, choice, fail, lit,
   lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
   ParserState, space, what)
 

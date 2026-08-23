@@ -7,7 +7,7 @@ from basic.stmt import parse_linenum, parse_stmt, Stmt
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from io import TextIOWrapper
-from parserlib.parser import (ap, choice, end, fail, lit,
+from tdp_parser.parser import (ap, choice, end, fail, lit,
   lit_ci, NoParse, optional, parse, parse_tuple, ParserState,
   space, the_rest)
 import readline
