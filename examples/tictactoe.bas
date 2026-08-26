@@ -5,6 +5,7 @@
 50 PRINT " 4 | 5 | 6"
 60 PRINT "---+---+---"
 70 PRINT " 7 | 8 | 9"
+75 PRINT
 80 REM Board: empty=0, X=1, O=4
 90 DIM B[9]
 95 DIM E[9]
@@ -67,7 +68,7 @@
 770 GOTO 720
 780 IF B[A] = 0 THEN 820
 790 PRINT "Square", CHR(48 + A), "is taken - it's an ";
-800 PRINT CHR(91 - 3 * B[A])
+800 PRINT CHR(91 - 3 * B[A]); "."
 810 GOTO 720
 820 LET B[A] = 4
 830 LET C = C * 10 + A
