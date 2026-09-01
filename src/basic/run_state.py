@@ -1,6 +1,5 @@
 from basic.exceptions import EvalError
-from basic.expr import (ArrayElt, LookupVar, pprint_float,
-  VarName)
+from basic.expr import ArrayElt, LookupVar, pprint_float, VarName
 from dataclasses import dataclass, field
 from typing import Callable, Concatenate, NewType
 
@@ -20,12 +19,10 @@ class ForLoop:
 @dataclass
 class RunState[Stmt](LookupVar):
   prog: list[Stmt] = field(default_factory=list)
-  line_map: dict[LineNum, int] = field(
-    default_factory=dict)
+  line_map: dict[LineNum, int] = field(default_factory=dict)
   addr: int = 0
   goto: int | StopRun | None = None
-  scalars: dict[VarName, float] = field(
-    default_factory=dict)
+  scalars: dict[VarName, float] = field(default_factory=dict)
   arrays: dict[VarName, list[float | None]] = field(
     default_factory=dict)
   for_loops: dict[VarName, ForLoop] = field(
@@ -41,13 +38,11 @@ class RunState[Stmt](LookupVar):
       raise EvalError(f'variable {var} is undefined')
 
   def lookup_array(self, var: ArrayElt) -> float:
-    return self.safe_array_op(
-      var,
-      self.unsafe_lookup_array)
+    return self.safe_array_op(var, self.unsafe_lookup_array)
 
   def unsafe_lookup_array(self, var: ArrayElt) -> float:
     val: float | None = (
-        self.arrays[var.name][int(var.subscr) - 1])
+      self.arrays[var.name][int(var.subscr) - 1])
     if val is None:
       raise EvalError(' '.join([
         f'array element {var.name}[{var.subscr}]',
@@ -56,26 +51,18 @@ class RunState[Stmt](LookupVar):
       return val
 
   def set_array_elt(
-      self,
-      var: ArrayElt,
-      val: float
-      ) -> None:
+      self, var: ArrayElt, val: float) -> None:
     return self.safe_array_op(
       var, self.unsafe_set_array_elt, val)
 
   def unsafe_set_array_elt(
-      self,
-      var: ArrayElt,
-      val: float
-      ) -> None:
+      self, var: ArrayElt, val: float) -> None:
     self.arrays[var.name][int(var.subscr) - 1] = val
 
   def safe_array_op[Output, **P](
       self,
       var: ArrayElt,
-      op: Callable[
-        Concatenate[ArrayElt, P],
-        Output],
+      op: Callable[Concatenate[ArrayElt, P], Output],
       *args: P.args,
       **kwargs: P.kwargs
       ) -> Output:

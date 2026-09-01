@@ -1,11 +1,11 @@
-from basic.expr import (ArrayVar, Expr, Num, Parens,
-  ScalarVar, Var, VarName)
+from basic.expr import (
+  ArrayVar, Expr, Num, Parens, ScalarVar, Var, VarName)
 from basic.func import all_funcs, Func
 from basic.op import all_binops, all_unaryops, BinOp, UnaryOp
 from math import isinf
-from tdp_parser.parser import (ap, attempt, choice, fail, lit,
-  lit_ci, manyOf, manyOf1, oneOf, NoParse, optional,
-  ParserState, space, what)
+from tdp_parser.parser import (
+  ap, attempt, choice, fail, lit, lit_ci, manyOf, manyOf1,
+  oneOf, NoParse, optional, ParserState, space, what)
 
 type PS = ParserState[str]
 
@@ -19,16 +19,10 @@ def non_op(s: PS) -> Expr:
   operator.'''
   space(s)
   try:
-    return choice(s, [
-      paren_expr,
-      num_expr,
-      func_expr,
-      var_expr,
-      unary_expr])
+    return choice(
+      s, [paren_expr, num_expr, func_expr, var_expr, unary_expr])
   except NoParse:
-    fail(s,
-         expected='expression',
-         found=s._input[s.cursor:])
+    fail(s, expected='expression', found=s._input[s.cursor:])
 
 def ops(s: PS, expr: Expr) -> Expr:
   '''Parse a sequence of binary operators.'''
@@ -52,24 +46,25 @@ def ops(s: PS, expr: Expr) -> Expr:
     try:
       expr2 = non_op(s)
     except NoParse:
-      fail(s,
-           expected=f'expression after "{op_cls2.symbol}"',
-           found=s._input[s.cursor:])
+      fail(
+        s,
+        expected=f'expression after "{op_cls2.symbol}"',
+        found=s._input[s.cursor:])
     # pop the stack until the top has strictly lower
     # precedence than the one we found, or until the stack
     # is empty. then push the one we found onto the stack.
-    while (len(stack) > 0 and
-           op_cls2.precedence <= stack[-1][1].precedence):
+    while (
+        len(stack) > 0
+        and op_cls2.precedence <= stack[-1][1].precedence):
       expr1, op_cls1 = stack.pop()
       expr = op_cls1(expr1, expr)
     stack.append((expr, op_cls2))
     expr = expr2
 
 def op_class(s: PS) -> type[BinOp]:
-  '''Parse a binary operator symbol and return its 
+  '''Parse a binary operator symbol and return its
   class.'''
-  return choice(s,
-    [ap(one_op, cls) for cls in all_binops])
+  return choice(s, [ap(one_op, cls) for cls in all_binops])
 
 def one_op(s: PS, cls: type[BinOp]) -> type[BinOp]:
   '''Parse the symbol of the given binary operator and
@@ -87,8 +82,7 @@ def paren_expr(s: PS) -> Parens:
 
 def char_range(_from: str, to: str) -> set[str]:
   '''An inclusive range of characters.'''
-  return set(
-    chr(i) for i in range(ord(_from), ord(to) + 1))
+  return set(chr(i) for i in range(ord(_from), ord(to) + 1))
 
 ascii_digit_range: set[str] = char_range('0', '9')
 ascii_letter_range: set[str] = (
@@ -130,30 +124,26 @@ def parse_num(s: PS) -> float:
   except NoParse:
     pass
   if len(int_part) + len(frac_part) == 0:
-    fail(s,
-      expected='number',
-      found=s._input[s.cursor:])
+    fail(s, expected='number', found=s._input[s.cursor:])
   try:
     exp_part = attempt(s, exponent)
   except NoParse:
     pass
-  num_str: str = ''.join([
-    int_part, point, frac_part, exp_part])
+  num_str: str = ''.join([int_part, point, frac_part, exp_part])
   try:
     val: float = float(num_str)
   except ValueError:
     fail(s, expected='number', found=num_str)
   if isinf(val):
-    fail(s, expected='number',
-      found='a number that is too large')
+    fail(
+      s, expected='number', found='a number that is too large')
   return val
 
 def exponent(s: PS) -> str:
   '''Parse the exponent part of a numetic litetal.'''
   exp_part: str = lit_ci(s, 'E')
   try:
-    exp_part += choice(s,
-      [ap(lit, sgn) for sgn in '+-'])
+    exp_part += choice(s, [ap(lit, sgn) for sgn in '+-'])
   except NoParse:
     pass
   exp_part += ascii_digits1(s)
@@ -161,8 +151,8 @@ def exponent(s: PS) -> str:
 
 def func_expr(s: PS) -> Func:
   '''Parse a function call.'''
-  func_cls: type[Func] = choice(s,
-    [ap(one_func, func) for func in all_funcs])
+  func_cls: type[Func] = choice(
+    s, [ap(one_func, func) for func in all_funcs])
   space(s)
   lit(s, '(')
   expr: Expr = parse_expr(s)
@@ -205,15 +195,11 @@ def subscript(s: PS) -> Expr:
 
 def unary_expr(s: PS) -> UnaryOp:
   '''Parse a unary operator expression.'''
-  unaryop_cls: type[UnaryOp] = choice(s,
-    [ap(one_unaryop, unaryop)
-      for unaryop in all_unaryops])
+  unaryop_cls: type[UnaryOp] = choice(
+    s, [ap(one_unaryop, unaryop) for unaryop in all_unaryops])
   return unaryop_cls(non_op(s))
 
-def one_unaryop(
-    s: PS,
-    cls: type[UnaryOp]
-    ) -> type[UnaryOp]:
+def one_unaryop(s: PS, cls: type[UnaryOp]) -> type[UnaryOp]:
   '''Parse the symbol of a unary operator and return its
   class.'''
   lit(s, cls.symbol)

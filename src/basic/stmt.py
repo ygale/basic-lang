@@ -1,18 +1,20 @@
 from abc import abstractmethod
 from basic.exceptions import EvalError, RTError
-from basic.expr import (ArrayElt, ArrayVar, Expr, LookupVar,
-  pprint_float, ScalarVar, Var, VarName)
-from basic.parse_expr import (ascii_digit_range,
-  ascii_digits1, parse_expr, parse_num, var_expr, var_name)
-from basic.run_state import (ForLoop, LineNum, RunState,
-  StopRun)
+from basic.expr import (
+  ArrayElt, ArrayVar, Expr, LookupVar, pprint_float, ScalarVar,
+  Var, VarName)
+from basic.parse_expr import (
+  ascii_digit_range, ascii_digits1, parse_expr, parse_num,
+  var_expr, var_name)
+from basic.run_state import ForLoop, LineNum, RunState, StopRun
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum, unique
 from math import isinf
-from tdp_parser.parser import (ap, attempt, choice, end, fail,
-  lit, lit_ci, many, many1, manyNotOf, NoParse, one, optional,
-  ParserState, sepBy, space, the_rest)
+from tdp_parser.parser import (
+  ap, attempt, choice, end, fail, lit, lit_ci, many, many1,
+  manyNotOf, NoParse, one, optional, ParserState, sepBy, space,
+  the_rest)
 import readline
 from typing import ClassVar, NewType, Self
 
@@ -32,19 +34,16 @@ class Stmt:
 
   def pprint(self) -> str:
     '''Pretty-print.'''
-    return ' '.join([
-      str(self.line_num),
-      self.name
-      ] + [t for t in self.pprint_tokens()])
+    return ' '.join(
+      [str(self.line_num), self.name]
+      + [t for t in self.pprint_tokens()])
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
-    '''Parse the part of a statement following the
-    line number and statement name. Then, given
-    the line number, return the statement object.'''
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
+    '''Parse the part of a statement following the line
+    number and statement name. Then, given the line
+    number, return the statement object.'''
     raise NotImplementedError
 
   @classmethod
@@ -57,22 +56,17 @@ class Stmt:
     space(s)
     return this.parse_body(s, line_num)
 
-  def eval_expr(
-      self,
-      lv: LookupVar,
-      expr: Expr
-      ) -> float:
+  def eval_expr(self, lv: LookupVar, expr: Expr) -> float:
     try:
       val: float = expr.evaluate(lv)
     except EvalError as e:
       raise RTError(self.line_num, str(e))
     except Exception as e:
       # if this happens, figure out how to catch it
-      raise RTError(self.line_num,
-        f'expression: {repr(e)}')
+      raise RTError(self.line_num, f'expression: {repr(e)}')
     if isinf(val):
-      raise RTError(self.line_num,
-        'expression value is too large')
+      raise RTError(
+        self.line_num, 'expression value is too large')
     return val
 
   @abstractmethod
@@ -80,10 +74,7 @@ class Stmt:
     raise NotImplementedError
 
 def assign(
-    stmt: Stmt,
-    rs: RunState[Stmt],
-    var: Var,
-    val: float | Expr
+    stmt: Stmt, rs: RunState[Stmt], var: Var, val: float | Expr
     ) -> None:
   '''Assign a value to a scalar or array variable.'''
   computed: float
@@ -95,14 +86,11 @@ def assign(
     rs.scalars[var.name] = computed
   elif isinstance(var, ArrayVar):
     rs.set_array_elt(
-      ArrayElt(
-        var.name,
-        stmt.eval_expr(rs, var.subscr)),
+      ArrayElt(var.name, stmt.eval_expr(rs, var.subscr)),
       computed)
   else:
     # if this happens, find out how to catch it
-    raise TypeError(
-      f'unkown var type in line {stmt.line_num}')
+    raise TypeError(f'unkown var type in line {stmt.line_num}')
 
 @dataclass
 class Let(Stmt):
@@ -115,10 +103,8 @@ class Let(Stmt):
     yield self.val.pprint()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     var: Var = var_expr(s)
     space(s)
     lit(s, '=')
@@ -137,10 +123,8 @@ class Goto(Stmt):
     yield str(self.dest)
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, parse_linenum(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -149,7 +133,7 @@ class Goto(Stmt):
     except KeyError:
       raise RTError(self.line_num, ' '.join([
         f'GOTO destination line {self.dest}',
-        f'does not exist']))
+        'does not exist']))
     rs.goto = addr
 
 @dataclass
@@ -163,10 +147,8 @@ class If(Stmt):
     yield str(self.dest)
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     cond: Expr = parse_expr(s)
     space(s)
     lit_ci(s, 'THEN')
@@ -182,7 +164,7 @@ class If(Stmt):
     except KeyError:
       raise RTError(self.line_num, ' '.join([
         f'THEN destination line {self.dest}',
-        f'does not exist']))
+        'does not exist']))
 
 def parse_step(s: ParserState[str]) -> Expr:
   '''Parse the STEP clause of a FOR statement.'''
@@ -209,10 +191,8 @@ class For(Stmt):
       yield self.step.pprint()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     var: ScalarVar = scalar_var(s)
     space(s)
     lit(s, '=')
@@ -226,8 +206,7 @@ class For(Stmt):
     return this(line_num, var, from_, to, step)
 
   def run(self, rs: RunState[Stmt]) -> None:
-    rs.scalars[self.var.name] = self.eval_expr(
-      rs, self.from_)
+    rs.scalars[self.var.name] = self.eval_expr(rs, self.from_)
     parent: VarName | None
     if self.var.name in rs.for_loops:
       # A FOR loop for this variable is already active.
@@ -244,12 +223,13 @@ class For(Stmt):
       parent = rs.inner_for
       rs.inner_for = self.var.name
     rs.for_loops[self.var.name] = ForLoop(
-      var = self.var.name,
-      first_line = rs.addr + 1,
-      to = self.eval_expr(rs, self.to),
-      step = (1.0 if self.step is None else
-        self.eval_expr(rs, self.step)),
-      parent = parent)
+      var=self.var.name,
+      first_line=rs.addr + 1,
+      to=self.eval_expr(rs, self.to),
+      step=(
+        1.0 if self.step is None
+        else self.eval_expr(rs, self.step)),
+      parent=parent)
 
 @dataclass
 class Next(Stmt):
@@ -259,10 +239,8 @@ class Next(Stmt):
     yield self.var.pprint()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, scalar_var(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -281,8 +259,8 @@ class Next(Stmt):
       rs.inner_for = loop.parent
       del rs.for_loops[loop.var]
     else:
-      raise RTError(self.line_num,
-        f'NEXT {self.var.name} has no FOR')
+      raise RTError(
+        self.line_num, f'NEXT {self.var.name} has no FOR')
     # bump the FOR variable to its next value
     try:
       rs.scalars[loop.var] += loop.step
@@ -293,9 +271,8 @@ class Next(Stmt):
         'on line {self.line_num}']))
     # check if the loop is done
     done: bool = (
-      rs.scalars[loop.var] > loop.to
-      if loop.step >= 0.0 else
-      rs.scalars[loop.var] < loop.to)
+      rs.scalars[loop.var] > loop.to if loop.step >= 0.0
+      else rs.scalars[loop.var] < loop.to)
     if done:
       rs.inner_for = loop.parent
       del rs.for_loops[loop.var]
@@ -308,15 +285,11 @@ class PrintSep(StrEnum):
   COMMA = ','
 
 def parse_printsep(s: ParserState[str]) -> PrintSep:
-  if optional(s, ap(lit, PrintSep.SEMICOLON)
-     ) is not None:
+  if optional(s, ap(lit, PrintSep.SEMICOLON)) is not None:
     return PrintSep.SEMICOLON
-  if optional(s, ap(lit, PrintSep.COMMA)
-     ) is not None:
+  if optional(s, ap(lit, PrintSep.COMMA)) is not None:
     return PrintSep.COMMA
-  fail(s,
-    expected='comma or semicolon',
-    found=s._input[s.cursor:])
+  fail(s, expected='comma or semicolon', found=s._input[s.cursor:])
 
 @dataclass
 class PrintItem:
@@ -326,9 +299,7 @@ class PrintItem:
   def pprint(self) -> str:
     raise NotImplementedError
 
-  def pprint_print_item(self,
-      sep: PrintSep | None = None
-      ) -> str:
+  def pprint_print_item(self, sep: PrintSep | None = None) -> str:
     if sep is None:
       return self.pprint()
     else:
@@ -339,8 +310,7 @@ class PrintItem:
     raise NotImplementedError
 
   @abstractmethod
-  def run(self, rs: RunState[Stmt], pr: 'Print'
-      ) -> None:
+  def run(self, rs: RunState[Stmt], pr: 'Print') -> None:
     raise NotImplementedError
 
 @dataclass
@@ -355,15 +325,14 @@ class PrintNum(PrintItem):
   def parse(this, s: ParserState[str]) -> Self:
     return this(parse_expr(s))
 
-  def run(self, rs: RunState[Stmt], pr: 'Print'
-      ) -> None:
+  def run(self, rs: RunState[Stmt], pr: 'Print') -> None:
     val: float = pr.eval_expr(rs, self.val)
     print(pprint_float(val), end='')
 
 @dataclass
 class PrintString(PrintItem):
   '''A literal string in a PRINT statement.'''
-  pstr: str # cannot contain a double qoute
+  pstr: str  # cannot contain a double qoute
 
   def pprint(self) -> str:
     return f'"{self.pstr}"'
@@ -375,14 +344,13 @@ class PrintString(PrintItem):
     lit(s, '"')
     return this(pstr)
 
-  def run(self, rs: RunState[Stmt], pr: 'Print'
-      ) -> None:
+  def run(self, rs: RunState[Stmt], pr: 'Print') -> None:
     print(self.pstr, end='')
 
 @dataclass
 class PrintChr(PrintItem):
-  '''A single character specified by its Unicode value
-  in a PRINT statement.'''
+  '''A single character specified by its Unicode value in
+  a PRINT statement.'''
   chr_val: Expr
 
   def pprint(self) -> str:
@@ -398,8 +366,7 @@ class PrintChr(PrintItem):
     lit(s, ')')
     return this(chr_val)
 
-  def run(self, rs: RunState[Stmt], pr: 'Print'
-      ) -> None:
+  def run(self, rs: RunState[Stmt], pr: 'Print') -> None:
     ch: float = pr.eval_expr(rs, self.chr_val)
     try:
       print(chr(int(ch)), end='')
@@ -411,16 +378,10 @@ class PrintChr(PrintItem):
 def parse_printitem(s: ParserState[str]) -> PrintItem:
   return choice(
     s,
-    [item for item in
-      [ PrintString.parse,
-        PrintChr.parse,
-        PrintNum.parse] # order matters
-    ]
-  )
+    [PrintString.parse, PrintChr.parse, PrintNum.parse])  # order matters
 
 def parse_sep_printitem(
-    s: ParserState[str]
-    ) -> tuple[PrintSep, PrintItem]:
+    s: ParserState[str]) -> tuple[PrintSep, PrintItem]:
   sep: PrintSep = parse_printsep(s)
   space(s)
   item: PrintItem = parse_printitem(s)
@@ -440,8 +401,7 @@ class PrintItems:
       else:
         yield self.first_item.pprint_print_item()
     else:
-      yield self.first_item.pprint_print_item(
-        self.items[0][0])
+      yield self.first_item.pprint_print_item(self.items[0][0])
       i: int
       for i in range(1, len(self.items)):
         yield self.items[i-1][1].pprint_print_item(
@@ -455,12 +415,11 @@ class PrintItems:
   @classmethod
   def parse(this, s: ParserState[str]) -> Self:
     first_item: PrintItem = parse_printitem(s)
-    items: list[tuple[PrintSep, PrintItem]] = sepBy(s,
-      space, parse_sep_printitem)
+    items: list[tuple[PrintSep, PrintItem]] = sepBy(
+      s, space, parse_sep_printitem)
     space(s)
     no_newline: bool = False
-    if optional(s, ap(lit, PrintSep.SEMICOLON)
-      ) is not None:
+    if optional(s, ap(lit, PrintSep.SEMICOLON)) is not None:
       no_newline = True
     return this(first_item, items, no_newline)
 
@@ -484,10 +443,8 @@ class Print(Stmt):
       yield from self.items.pprint_tokens()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, optional(s, PrintItems.parse))
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -502,6 +459,7 @@ def neg_space(s: ParserState[str]) -> None:
   space(s)
 
 num_chars: set[str] = ascii_digit_range | set('-.')
+
 def parse_input(s: ParserState[str]) -> float:
   '''Try hard to find a number in the input, or return
   zero.'''
@@ -532,10 +490,8 @@ class Input(Stmt):
     yield self.var.pprint()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, var_expr(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -544,8 +500,7 @@ class Input(Stmt):
     except EOFError:
       assign(self, rs, self.var, 0.0)
       return
-    assign(self, rs, self.var,
-      parse_input(ParserState(inp)))
+    assign(self, rs, self.var, parse_input(ParserState(inp)))
 
 @dataclass
 class Read(Stmt):
@@ -555,19 +510,15 @@ class Read(Stmt):
     yield self.var.pprint()
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, var_expr(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
     if len(rs.data) == 0:
-      raise RTError(self.line_num,
-        'READ with no DATA.')
+      raise RTError(self.line_num, 'READ with no DATA.')
     if rs.data_cursor >= len(rs.data):
-      raise RTError(self.line_num,
-        'no more DATA for READ.')
+      raise RTError(self.line_num, 'no more DATA for READ.')
     assign(self, rs, self.var, rs.data[rs.data_cursor])
     rs.data_cursor += 1
 
@@ -582,15 +533,11 @@ class Data(Stmt):
       yield pprint_float(self.data[-1])
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     data: list[float] = sepBy(s, comma, parse_num)
     if len(data) == 0:
-      fail(s,
-        expected = 'one or more numbers',
-        found = 'none')
+      fail(s, expected='one or more numbers', found='none')
     return this(line_num, data)
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -598,8 +545,7 @@ class Data(Stmt):
     return
 
 def comma(s: ParserState[str]) -> str:
-  '''Parse a comma surrounded by optional
-  whitespace.'''
+  '''Parse a comma surrounded by optional whitespace.'''
   space(s)
   lit(s, ',')
   space(s)
@@ -612,10 +558,8 @@ class Restore(Stmt):
     return iter([])
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num)
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -630,10 +574,8 @@ class Dim(Stmt):
     yield f'{self.varname}[{str(self.size)}]'
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     varname: VarName = var_name(s)
     space(s)
     lit(s, '[')
@@ -645,8 +587,8 @@ class Dim(Stmt):
 
   def run(self, rs: RunState[Stmt]) -> None:
     if self.varname in rs.arrays:
-      raise RTError(self.line_num,
-        f'array {self.varname} already has DIM')
+      raise RTError(
+        self.line_num, f'array {self.varname} already has DIM')
     rs.arrays[self.varname] = [None] * self.size
 
 @dataclass
@@ -657,10 +599,8 @@ class Rem(Stmt):
     yield self.comment
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num, the_rest(s))
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -673,10 +613,8 @@ class Stop(Stmt):
     return iter([])
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num)
 
   def run(self, rs: RunState[Stmt]) -> None:
@@ -690,28 +628,23 @@ class End(Stmt):
     return iter([])
 
   @classmethod
-  def parse_body(this,
-      s: ParserState[str],
-      line_num: LineNum
-      ) -> Self:
+  def parse_body(
+      this, s: ParserState[str], line_num: LineNum) -> Self:
     return this(line_num)
 
   def run(self, rs: RunState[Stmt]) -> None:
     rs.goto = StopRun()
 
-all_stmts: list[type[Stmt]] = [Let, Goto, If, For, Next,
-  Print, Input, Read, Data, Restore, Dim, Rem, Stop,
-  End]
+all_stmts: list[type[Stmt]] = [
+  Let, Goto, If, For, Next, Print, Input, Read, Data, Restore,
+  Dim, Rem, Stop, End]
 
 def parse_stmt(s: ParserState[str]) -> Stmt:
   '''Parse a statement from a line of text.'''
   try:
-    stmt: Stmt = choice(s,
-      [stmt.parse for stmt in all_stmts])
+    stmt: Stmt = choice(s, [stmt.parse for stmt in all_stmts])
   except NoParse:
-    fail(s,
-      expected='statement',
-      found=s._input[s.cursor:])
+    fail(s, expected='statement', found=s._input[s.cursor:])
   space(s)
   end(s)
   return stmt
@@ -720,19 +653,15 @@ def parse_natnum(s: ParserState[str]) -> int:
   '''Parse a positive integer.'''
   num: int = int(ascii_digits1(s))
   if num < 1:
-    fail(s,
-      expected='whole number',
-      found=s._input[s.cursor:])
+    fail(s, expected='whole number', found=s._input[s.cursor:])
   return num
 
 def parse_linenum(s: ParserState[str]) -> LineNum:
   '''Parse a line number.'''
   try:
-    return(LineNum(parse_natnum(s)))
+    return LineNum(parse_natnum(s))
   except NoParse:
-    fail(s,
-      expected='line number',
-      found=s._input[s.cursor:])
+    fail(s, expected='line number', found=s._input[s.cursor:])
 
 def scalar_var(s: ParserState[str]) -> ScalarVar:
   '''Parse a scalar variable reference.'''

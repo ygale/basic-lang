@@ -29,8 +29,7 @@ class Sgn(Func):
   def evaluate(self, lv: LookupVar) -> float:
     val: float = self.arg.evaluate(lv)
     # careful about -0.0
-    return 0.0 if val == 0.0 else (
-      math.copysign(1.0, val))
+    return 0.0 if val == 0.0 else math.copysign(1.0, val)
 
 class Sqr(Func):
   name = FuncName('SQR')

@@ -20,8 +20,7 @@ class UnaryOp(Op):
   arg: Expr
   precedence = 4
   def pprint(self) -> str:
-    return (self.symbol +
-            self.arg.pprint_prec(self.precedence))
+    return self.symbol + self.arg.pprint_prec(self.precedence)
 
 @dataclass
 class Negate(UnaryOp):
@@ -51,30 +50,26 @@ class Plus(BinOp):
   symbol = Symbol('+')
   precedence = 2
   def evaluate(self, lv: LookupVar) -> float:
-    return (self.arg1.evaluate(lv) +
-            self.arg2.evaluate(lv))
+    return self.arg1.evaluate(lv) + self.arg2.evaluate(lv)
 
 class Minus(BinOp):
   symbol = Symbol('-')
   precedence = 2
   def evaluate(self, lv: LookupVar) -> float:
-    return (self.arg1.evaluate(lv) -
-            self.arg2.evaluate(lv))
+    return self.arg1.evaluate(lv) - self.arg2.evaluate(lv)
 
 class Times(BinOp):
   symbol = Symbol('*')
   precedence = 3
   def evaluate(self, lv: LookupVar) -> float:
-    return (self.arg1.evaluate(lv) *
-            self.arg2.evaluate(lv))
+    return self.arg1.evaluate(lv) * self.arg2.evaluate(lv)
 
 class Div(BinOp):
   symbol = Symbol('/')
   precedence = 3
   def evaluate(self, lv: LookupVar) -> float:
     try:
-      return (self.arg1.evaluate(lv) /
-              self.arg2.evaluate(lv))
+      return self.arg1.evaluate(lv) / self.arg2.evaluate(lv)
     except ZeroDivisionError:
       raise EvalError('division by zero')
 
@@ -84,8 +79,7 @@ class Power(BinOp):
   def evaluate(self, lv: LookupVar) -> float:
     try:
       val: float | complex = (
-        self.arg1.evaluate(lv) **
-        self.arg2.evaluate(lv))
+        self.arg1.evaluate(lv) ** self.arg2.evaluate(lv))
     except ZeroDivisionError:
       raise EvalError('negative power of zero')
     except OverflowError:
@@ -95,62 +89,56 @@ class Power(BinOp):
     else:
       raise EvalError('fractional power of a negative')
 
-TRUE:  float = 1.0
+TRUE: float = 1.0
 FALSE: float = 0.0
 
 class Eq(BinOp):
   symbol = Symbol('=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) ==
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) == self.arg2.evaluate(lv)
+      else FALSE)
 
 class Ne(BinOp):
   symbol = Symbol('<>')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) !=
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) != self.arg2.evaluate(lv)
+      else FALSE)
 
 class Lt(BinOp):
   symbol = Symbol('<')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) <
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) < self.arg2.evaluate(lv)
+      else FALSE)
 
 class Le(BinOp):
   symbol = Symbol('<=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) <=
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) <= self.arg2.evaluate(lv)
+      else FALSE)
 
 class Gt(BinOp):
   symbol = Symbol('>')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) >
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) > self.arg2.evaluate(lv)
+      else FALSE)
 
 class Ge(BinOp):
   symbol = Symbol('>=')
   precedence = 1
   def evaluate(self, lv: LookupVar) -> float:
-    return (TRUE if
-            self.arg1.evaluate(lv) >=
-            self.arg2.evaluate(lv)
-            else FALSE)
+    return (
+      TRUE if self.arg1.evaluate(lv) >= self.arg2.evaluate(lv)
+      else FALSE)
 
-all_binops: list[type[BinOp]] = [ # order matters
+all_binops: list[type[BinOp]] = [  # order matters
   Plus, Minus, Times, Div, Power, Eq, Ne, Le, Ge, Lt, Gt]

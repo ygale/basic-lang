@@ -1,22 +1,20 @@
 from abc import abstractmethod
-from basic.exceptions import (BaseReplError, ReplError,
-  ReplSyntaxError)
+from basic.exceptions import BaseReplError, ReplError, ReplSyntaxError
 from basic.run import run
 from basic.run_state import LineNum
 from basic.stmt import parse_linenum, parse_stmt, Stmt
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from io import TextIOWrapper
-from tdp_parser.parser import (ap, choice, end, fail, lit,
-  lit_ci, NoParse, optional, parse, parse_tuple, ParserState,
-  space, the_rest)
+from tdp_parser.parser import (
+  ap, choice, end, fail, lit, lit_ci, NoParse, optional, parse,
+  parse_tuple, ParserState, space, the_rest)
 import readline
 from typing import ClassVar, NewType, Self
 
 @dataclass
 class ReplState:
-  prog: dict[LineNum, Stmt] = field(
-    default_factory = dict)
+  prog: dict[LineNum, Stmt] = field(default_factory=dict)
   dirty: bool = False
   exit_repl: bool = False
 
@@ -27,10 +25,8 @@ class LineRange:
 
 def parse_line_range(s: ParserState[str]) -> LineRange:
   try:
-    return choice(s, [
-      parse_line_range_from,
-      parse_line_range_to,
-      ])
+    return choice(
+      s, [parse_line_range_from, parse_line_range_to])
   except NoParse:
     return LineRange(None, None)
 
@@ -61,8 +57,8 @@ class Cmd:
 
   @classmethod
   def parse_body(this, s: ParserState[str]) -> Self:
-    '''Parse the part of a command following the command name.
-    Return the command object.'''
+    '''Parse the part of a command following the command
+    name. Return the command object.'''
     raise NotImplementedError
 
   @classmethod
@@ -79,9 +75,9 @@ class Cmd:
 
 @dataclass
 class Add(Cmd):
-  '''Read program lines from a file, and merge them into the
-  current program. If a line number already exists, replace
-  that line with the new one.'''
+  '''Read program lines from a file, and merge them into
+  the current program. If a line number already exists,
+  replace that line with the new one.'''
   name: ClassVar[CmdName] = CmdName('ADD')
   file_name: str
 
@@ -91,7 +87,8 @@ class Add(Cmd):
     return this(file_name.rstrip())
 
   def run(self, rs: ReplState) -> None:
-    rs.prog.update((stmt.line_num, stmt)
+    rs.prog.update(
+      (stmt.line_num, stmt)
       for stmt in read_stmts(rs, self.file_name))
     rs.dirty = True
 
@@ -110,9 +107,9 @@ class Exit(Cmd):
 
 @dataclass
 class List(Cmd):
-  '''Print the lines of the program. If a range is specified,
-  only print the lines whose line number is within the
-  range.'''
+  '''Print the lines of the program. If a range is
+  specified, only print the lines whose line number is
+  within the range.'''
   name: ClassVar[CmdName] = CmdName('LIST')
   lines: LineRange
 
@@ -137,7 +134,8 @@ class Load(Cmd):
 
   def run(self, rs: ReplState) -> None:
     if are_you_sure(rs):
-      rs.prog = {stmt.line_num: stmt
+      rs.prog = {
+        stmt.line_num: stmt
         for stmt in read_stmts(rs, self.file_name)}
       rs.dirty = False
 
@@ -208,25 +206,22 @@ class Save(Cmd):
     if self.lines.from_ is None and self.lines.to is None:
       rs.dirty = False
 
-all_cmds: list[type[Cmd]] = [Add, Exit, List, Load, New, Quit,
-  Run, Save]
+all_cmds: list[type[Cmd]] = [
+  Add, Exit, List, Load, New, Quit, Run, Save]
 
 def parse_cmd(s: ParserState[str]) -> Cmd:
   '''Parse a command from a line of text.'''
   try:
-    cmd: Cmd = choice(s,
-      [cmd.parse for cmd in all_cmds])
+    cmd: Cmd = choice(s, [cmd.parse for cmd in all_cmds])
   except NoParse:
-    fail(s,
-      expected='command',
-      found=s._input[s.cursor:])
+    fail(s, expected='command', found=s._input[s.cursor:])
   space(s)
   end(s)
   return cmd
 
 def are_you_sure(rs: ReplState) -> bool:
-  '''When uders are about to lose unsaved changes, give them a
-  chance to change their mind.'''
+  '''When uders are about to lose unsaved changes, give
+  them a chance to change their mind.'''
   if not rs.dirty:
     return True
   try:
@@ -239,9 +234,7 @@ def are_you_sure(rs: ReplState) -> bool:
   return False
 
 def read_stmts(
-    rs: ReplState,
-    file_name: str
-    ) -> Iterator[Stmt]:
+    rs: ReplState, file_name: str) -> Iterator[Stmt]:
   '''Read statements from a file.'''
   try:
     f: TextIOWrapper
@@ -252,7 +245,8 @@ def read_stmts(
         try:
           yield parse_stmt(ParserState(line))
         except NoParse as e:
-          raise ReplSyntaxError(str(e),
+          raise ReplSyntaxError(
+            str(e),
             optional(ParserState(line), parse_linenum))
   except ReplSyntaxError:
     raise
@@ -260,17 +254,15 @@ def read_stmts(
     raise ReplError(f'Exception: {str(e)}')
 
 def list_stmts(
-    rs: ReplState,
-    lines: LineRange = LineRange(None, None)
+    rs: ReplState, lines: LineRange = LineRange(None, None)
     ) -> Iterator[Stmt]:
-  '''List the statements of the program within the given range
-  of line numbers, in order of line number.'''
-  for stmt in sorted(rs.prog.values(),
-      key = lambda s: s.line_num):
-    if (lines.from_ is not None
-        and stmt.line_num < lines.from_):
+  '''List the statements of the program within the given
+  range of line numbers, in order of line number.'''
+  for stmt in sorted(
+      rs.prog.values(), key=lambda s: s.line_num):
+    if lines.from_ is not None and stmt.line_num < lines.from_:
       continue
-    if (lines.to is not None and stmt.line_num > lines.to):
+    if lines.to is not None and stmt.line_num > lines.to:
       break
     yield stmt
 

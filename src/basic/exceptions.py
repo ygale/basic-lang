@@ -16,8 +16,8 @@ class BaseReplError(Exception):
   line: int | None = None
 
   def __str__(self) -> str:
-    line_msg: str = '' if self.line is None else (
-      f' on line {self.line}')
+    line_msg: str = (
+      '' if self.line is None else f' on line {self.line}')
     return f'{self.error_type}{line_msg}: {self.msg}'
 
 @dataclass

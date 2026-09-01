@@ -3,8 +3,7 @@ from basic.run_state import LineNum, RunState
 from basic.stmt import Data, End, Stmt
 
 def run(
-    prog: list[Stmt],
-    first_line: LineNum | None = None
+    prog: list[Stmt], first_line: LineNum | None = None
     ) -> None:
   if len(prog) == 0:
     # the empty program does nothing
@@ -15,13 +14,13 @@ def run(
       rs.prog[rs.addr].run(rs)
       if rs.goto is None:
         rs.addr += 1
-        # initRunState ensures that the last stmt is
-        # END so we do not need to check whether addr
-        # is too large
+        # initRunState ensures that the last stmt is END
+        # so we do not need to check whether addr is too
+        # large
       elif type(rs.goto) == int:
         rs.addr = rs.goto
         rs.goto = None
-      else: # StopRun
+      else:  # StopRun
         return
   except RTError as e:
     print(str(e))
@@ -32,8 +31,7 @@ def run(
     print(f'Exception: {repr(e)}')
 
 def initRunState(
-    prog: list[Stmt],
-    first_line: LineNum | None = None
+    prog: list[Stmt], first_line: LineNum | None = None
     ) -> RunState[Stmt]:
   if not isinstance(prog[-1], End):
     prog.append(End(LineNum(prog[-1].line_num + 1)))
@@ -52,10 +50,7 @@ def initRunState(
     try:
       addr = line_map[first_line]
     except KeyError:
-      raise RTError(first_line,
-        'Starting line does not exist')
+      raise RTError(
+        first_line, 'Starting line does not exist')
   return RunState(
-    prog = prog,
-    line_map = line_map,
-    addr = addr,
-    data = data)
+    prog=prog, line_map=line_map, addr=addr, data=data)
